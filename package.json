@@ -1,0 +1,142 @@
+{
+  "name": "japanese-ai-video-generator",
+  "version": "1.0.0",
+  "description": "日语AI视频生成平台 - 为日本用户提供智能翻译和视频生成服务",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,tsx,json,md}\"",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:integration": "jest --config jest.integration.config.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "analyze": "ANALYZE=true npm run build",
+    "db:generate": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > types/supabase.ts",
+    "db:reset": "supabase db reset",
+    "db:migrate": "supabase db push",
+    "postinstall": "husky install"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.0.0",
+    "@heroicons/react": "^2.2.0",
+    "@supabase/supabase-js": "^2.38.0",
+    "@types/pg": "^8.15.4",
+    "@vercel/blob": "^0.15.1",
+    "@vercel/kv": "^1.0.1",
+    "antd": "^5.26.4",
+    "bcryptjs": "^2.4.3",
+    "framer-motion": "^10.18.0",
+    "jsonwebtoken": "^9.0.2",
+    "next": "14.0.0",
+    "openai": "^4.20.0",
+    "pg": "^8.16.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "stripe": "^14.5.0",
+    "swr": "^2.2.4",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@next/bundle-analyzer": "^14.0.0",
+    "@playwright/test": "^1.40.0",
+    "@testing-library/jest-dom": "^6.1.4",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jest": "^29.5.8",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.9.0",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@typescript-eslint/eslint-plugin": "^6.11.0",
+    "@typescript-eslint/parser": "^6.11.0",
+    "autoprefixer": "^10.4.16",
+    "dotenv": "^17.2.0",
+    "eslint": "^8.53.0",
+    "eslint-config-next": "14.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-testing-library": "^6.1.0",
+    "husky": "^8.0.3",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "lint-staged": "^15.1.0",
+    "next-test-api-route-handler": "^4.0.8",
+    "postcss": "^8.4.31",
+    "prettier": "^3.1.0",
+    "tailwindcss": "^3.3.5",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "ai",
+    "video",
+    "generation",
+    "japanese",
+    "translation",
+    "nextjs",
+    "react",
+    "typescript",
+    "vercel"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/your-username/japanese-ai-video-generator#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/japanese-ai-video-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/japanese-ai-video-generator/issues"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm run type-check && npm run test"
+    }
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "moduleNameMapping": {
+      "^@/(.*)$": "<rootDir>/$1"
+    },
+    "collectCoverageFrom": [
+      "app/**/*.{js,ts,tsx}",
+      "components/**/*.{js,ts,tsx}",
+      "lib/**/*.{js,ts,tsx}",
+      "utils/**/*.{js,ts,tsx}",
+      "!**/*.d.ts",
+      "!**/node_modules/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  }
+}
