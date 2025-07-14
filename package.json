@@ -1,0 +1,45 @@
+{
+  "name": "japanese-ai-video-generator",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3003",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.2.6",
+    "@sendgrid/mail": "^8.1.5",
+    "@stripe/stripe-js": "^2.4.0",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@vercel/blob": "^1.1.1",
+    "antd": "^5.12.2",
+    "autoprefixer": "^10.0.1",
+    "axios": "^1.10.0",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.0",
+    "form-data": "^4.0.3",
+    "google-auth-library": "^9.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "next": "14.0.0",
+    "openai": "^5.9.0",
+    "pg": "^8.11.3",
+    "postcss": "^8",
+    "react": "^18",
+    "react-dom": "^18",
+    "stripe": "^14.9.0",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/pg": "^8.10.7"
+  }
+}
