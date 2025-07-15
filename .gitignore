@@ -260,3 +260,4 @@ $RECYCLE.BIN/
 # Linux system files
 .directory
 .Trash-* 
+.env*.local

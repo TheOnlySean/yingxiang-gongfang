@@ -25,7 +25,7 @@
       "@/lib/*": ["./lib/*"],
       "@/types/*": ["./types/*"],
       "@/utils/*": ["./utils/*"],
-      "@/hooks/*": ["./app/hooks/*"],
+      "@/hooks/*": ["./hooks/*"],
       "@/api/*": ["./app/api/*"]
     },
     "types": ["node"],

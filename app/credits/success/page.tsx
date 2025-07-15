@@ -4,17 +4,48 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Typography, Row, Col, Spin, Modal } from 'antd';
 import { CheckCircleOutlined, ShoppingOutlined, PlayCircleOutlined, CreditCardOutlined, WalletOutlined } from '@ant-design/icons';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useResponsive } from '@/hooks/useResponsive';
+import MobileCreditsSuccess from '@/app/components/MobileCreditsSuccess';
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function CreditsSuccessPage() {
-
   const [userCredits, setUserCredits] = useState<number | null>(null);
   const [purchaseInfo, setPurchaseInfo] = useState<any>(null);
   const [showInfo, setShowInfo] = useState(false);
   const [isUpdating, setIsUpdating] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const [shouldUseMobile, setShouldUseMobile] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isMobile, isTablet } = useResponsive();
+
+  // 处理挂载状态和设备类型检测
+  useEffect(() => {
+    setMounted(true);
+    // 只在客户端挂载后检测设备类型
+    setShouldUseMobile(isMobile || isTablet);
+  }, [isMobile, isTablet]);
+
+  // 如果还没有挂载，显示加载状态
+  if (!mounted) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  // 挂载后根据设备类型选择组件
+  if (shouldUseMobile) {
+    return <MobileCreditsSuccess />;
+  }
 
   useEffect(() => {
     let retryCount = 0;

@@ -91,7 +91,7 @@ export default function PlaygroundFixed() {
       return true;
     } catch (error) {
       console.error('Upload error:', error);
-      message.error('上传失败');
+      message.error('アップロードに失敗しました');
       return false;
     } finally {
       setIsUploading(false);
@@ -142,7 +142,7 @@ export default function PlaygroundFixed() {
       message.success('视频生成完成！');
     } catch (error) {
       console.error('Generation error:', error);
-      message.error('生成失败');
+      message.error('生成に失敗しました');
     } finally {
       setIsGenerating(false);
     }

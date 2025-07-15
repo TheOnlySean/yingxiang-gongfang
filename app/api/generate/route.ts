@@ -26,12 +26,22 @@ export async function POST(request: NextRequest) {
 
     // 解析请求体
     const body = await request.json();
-    const { originalPrompt, imageUrls } = body;
+    const { prompt, originalPrompt, seed, images, imageUrls } = body;
+
+    // 验证请求体 - 支持两种字段名
+    const promptText = prompt || originalPrompt;
+    if (!promptText || typeof promptText !== 'string') {
+      return NextResponse.json(
+        { success: false, error: 'Prompt is required and must be a string' },
+        { status: 400 }
+      );
+    }
 
     // 构建表单数据
     const form: IVideoGenerationForm = {
-      originalPrompt,
-      imageUrls
+      originalPrompt: promptText,
+      imageUrls: images || imageUrls || [],
+      ...(seed ? { seed } : {})
     };
 
     // 移除测试模式 - 直接使用真实KIE.AI API

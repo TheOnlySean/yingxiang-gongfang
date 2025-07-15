@@ -9,6 +9,8 @@
     "lint": "next lint",
     "env:dev": "node scripts/switch-environment.js development",
     "env:prod": "node scripts/switch-environment.js production",
+    "env:sync": "node scripts/sync-env-from-vercel.js",
+    "env:pull": "node scripts/quick-env-sync.js",
     "deploy:dev": "npm run env:dev && npm run build",
     "deploy:prod": "npm run env:prod && npm run build",
     "test": "echo \"测试功能待实现\" && exit 1"
@@ -33,6 +35,7 @@
     "google-auth-library": "^9.4.1",
     "jsonwebtoken": "^9.0.2",
     "next": "14.0.0",
+    "node-fetch": "^3.3.2",
     "openai": "^5.9.0",
     "pg": "^8.11.3",
     "postcss": "^8",
@@ -44,6 +47,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@swc/helpers": "^0.5.17",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/pg": "^8.10.7"
   }

@@ -115,7 +115,7 @@ export const userOperations = {
         userData.email,
         userData.password, // 这里应该传入已经哈希化的密码
         userData.displayName || '',
-        1000, // 初始积分
+        100, // 初始积分
         0, // 总使用积分
         0, // 生成视频数
         true, // 直接激活
@@ -366,7 +366,7 @@ export const userOperations = {
         userData.email || '',
         '', // OAuth用户无密码哈希
         userData.display_name || '',
-        userData.credits || 1000, // 初始积分
+        userData.credits || 100, // 初始积分
         0, // 总使用积分
         0, // 生成视频数
         true, // 直接激活

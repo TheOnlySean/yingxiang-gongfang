@@ -21,10 +21,10 @@ if (!KIE_AI_API_KEY) {
 
 // 视频生成配置
 const VIDEO_GENERATION_CONFIG = {
-  MAX_PROMPT_LENGTH: 1000,
+  MAX_PROMPT_LENGTH: 6000,
   MAX_IMAGE_SIZE: 10 * 1024 * 1024, // 10MB
   SUPPORTED_FORMATS: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-  DEFAULT_CREDITS_COST: 150
+  DEFAULT_CREDITS_COST: 300
 };
 
 // KIE.AI API客户端
@@ -156,9 +156,7 @@ export function validateVideoGenerationForm(form: IVideoGenerationForm): {
   // 验证prompt
   if (!form.originalPrompt || form.originalPrompt.trim().length === 0) {
     errors.push('Prompt is required');
-  }
-
-  if (form.originalPrompt.length > VIDEO_GENERATION_CONFIG.MAX_PROMPT_LENGTH) {
+  } else if (form.originalPrompt.length > VIDEO_GENERATION_CONFIG.MAX_PROMPT_LENGTH) {
     errors.push(`Prompt too long (max ${VIDEO_GENERATION_CONFIG.MAX_PROMPT_LENGTH} characters)`);
   }
 

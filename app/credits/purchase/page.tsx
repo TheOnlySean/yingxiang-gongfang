@@ -5,6 +5,8 @@ import { Card, Button, Typography, Row, Col, message, Spin, Badge } from 'antd';
 import { CreditCardOutlined, StarOutlined, CrownOutlined, ThunderboltOutlined, ArrowLeftOutlined, HomeOutlined, WalletOutlined } from '@ant-design/icons';
 import { loadStripe } from '@stripe/stripe-js';
 import { useRouter } from 'next/navigation';
+import { useResponsive } from '@/hooks/useResponsive';
+import MobileCreditsPurchase from '@/app/components/MobileCreditsPurchase';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -67,7 +69,37 @@ export default function CreditsPurchasePage() {
   const [loading, setLoading] = useState<string | null>(null);
   const [userCredits, setUserCredits] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const [shouldUseMobile, setShouldUseMobile] = useState(false);
   const router = useRouter();
+  const { isMobile, isTablet } = useResponsive();
+
+  // 处理挂载状态和设备类型检测
+  useEffect(() => {
+    setMounted(true);
+    // 只在客户端挂载后检测设备类型
+    setShouldUseMobile(isMobile || isTablet);
+  }, [isMobile, isTablet]);
+
+  // 如果还没有挂载，显示加载状态
+  if (!mounted) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  // 挂载后根据设备类型选择组件
+  if (shouldUseMobile) {
+    return <MobileCreditsPurchase />;
+  }
 
   // 获取用户余额
   useEffect(() => {

@@ -454,7 +454,7 @@ export default function WorkingPlayground() {
         setUploadedImages([newImage]);
         message.success('画像のアップロードが完了しました');
           } else {
-        const error = result.data?.uploads?.[0]?.error || result.error?.message || '上传失败';
+        const error = result.data?.uploads?.[0]?.error || result.error?.message || 'アップロード失敗';
         console.error('Upload failed:', error);
         message.error(`画像のアップロードに失敗しました: ${error}`);
       }
@@ -931,7 +931,7 @@ export default function WorkingPlayground() {
                   fontSize: '16px'
                 }}
               >
-                {isGenerating ? '生成中...' : !isAuthenticated ? 'ログインして動画を生成' : '動画を生成'}
+                {isGenerating ? '生成中...' : !isAuthenticated ? 'ログインして動画を生成' : '動画を生成（300ポイント）'}
               </Button>
               
             {user && (user.credits ?? 0) <= 0 && (
