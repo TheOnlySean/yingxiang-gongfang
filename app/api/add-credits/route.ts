@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     const newCredits = currentCredits + amount;
 
     // 更新用户credits
-    const updatedUser = await dbAdmin.updateUser(targetUser.id, {
+    const updatedUser = await dbAdmin.update(targetUser.id, {
       credits: newCredits
     });
 

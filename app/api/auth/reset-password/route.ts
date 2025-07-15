@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword, validatePassword, createRateLimiter } from '@/lib/auth';
-import { dbAdmin } from '@/lib/database';
+import { createDbConnection } from '@/lib/database';
 import { IApiResponse } from '@/types';
 
 // 重设密码请求的速率限制：每个IP每小时最多10次请求
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     // 检查令牌是否过期
     const now = new Date();
-    const tokenExpiry = new Date(user.reset_token_expires);
+    const tokenExpiry = new Date(user.passwordResetExpiresAt);
     
     if (now > tokenExpiry) {
       return NextResponse.json(
@@ -112,25 +112,36 @@ export async function POST(request: NextRequest) {
     const passwordHash = await hashPassword(password);
 
     // 更新用户密码并清除重置令牌
-    const updatedUser = await dbAdmin.updateUser(user.id, {
-      password_hash: passwordHash,
-      reset_token: null,
-      reset_token_expires: null
-    });
-
-    if (!updatedUser) {
-      console.error('Failed to update password');
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'DATABASE_ERROR',
-            message: 'Failed to reset password'
-          }
-        } as IApiResponse,
-        { status: 500 }
-      );
+    const client = await createDbConnection();
+    try {
+      const result = await client.query(`
+        UPDATE users SET 
+          password_hash = $1,
+          password_reset_token = NULL,
+          password_reset_expires_at = NULL,
+          updated_at = NOW()
+        WHERE id = $2
+        RETURNING *
+      `, [passwordHash, user.id]);
+      
+      if (result.rows.length === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'DATABASE_ERROR',
+              message: 'Failed to reset password'
+            }
+          } as IApiResponse,
+          { status: 500 }
+        );
+      }
+      
+    } finally {
+      await client.end();
     }
+
+
 
     return NextResponse.json(
       {
@@ -170,9 +181,9 @@ async function findUserByResetToken(token: string) {
     });
 
     const query = `
-      SELECT id, email, reset_token, reset_token_expires 
+      SELECT id, email, password_reset_token, password_reset_expires_at 
       FROM users 
-      WHERE reset_token = $1 AND reset_token_expires > NOW()
+      WHERE password_reset_token = $1 AND password_reset_expires_at > NOW()
     `;
     
     const result = await pool.query(query, [token]);

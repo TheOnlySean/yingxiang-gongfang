@@ -555,7 +555,7 @@ export async function deleteVideo(
   userId: string
 ): Promise<IApiResponse<{}>> {
   try {
-    const video = await dbAdmin.getVideoById(videoId);
+    const video = await dbAdmin.getVideoByTaskId(videoId);
     
     if (!video) {
       return {
@@ -605,7 +605,7 @@ export async function regenerateVideo(
   userId: string
 ): Promise<IApiResponse<IVideo>> {
   try {
-    const video = await dbAdmin.getVideoById(videoId);
+    const video = await dbAdmin.getVideoByTaskId(videoId);
     
     if (!video) {
       return {

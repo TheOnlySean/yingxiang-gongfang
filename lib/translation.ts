@@ -97,9 +97,7 @@ async function getTranslationCache(text: string): Promise<ITranslation | null> {
     const cache = await dbAdmin.getTranslationCache(hash);
     
     if (cache) {
-      // 增加使用次数
-      await dbAdmin.updateTranslationCacheUsage(hash);
-      
+      // 缓存命中，直接返回结果
       return {
         originalPrompt: cache.original_text,
         translatedPrompt: cache.translated_text,

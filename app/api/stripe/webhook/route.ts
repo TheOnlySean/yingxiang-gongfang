@@ -9,11 +9,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export async function POST(request: NextRequest) {
+  console.log('=== STRIPE WEBHOOK CALLED ===');
+  console.log('Timestamp:', new Date().toISOString());
+  console.log('STRIPE_WEBHOOK_SECRET present:', !!process.env.STRIPE_WEBHOOK_SECRET);
+  console.log('STRIPE_WEBHOOK_SECRET length:', process.env.STRIPE_WEBHOOK_SECRET?.length);
+  
   try {
     const body = await request.text();
     const signature = headers().get('stripe-signature');
 
+    console.log('Webhook body length:', body.length);
+    console.log('Signature present:', !!signature);
+    console.log('Signature value:', signature);
+
     if (!signature) {
+      console.error('No Stripe signature found');
       return NextResponse.json(
         { error: 'Missing Stripe signature' },
         { status: 400 }
@@ -28,8 +38,12 @@ export async function POST(request: NextRequest) {
         signature,
         process.env.STRIPE_WEBHOOK_SECRET!
       );
+      console.log('✅ Webhook signature verified successfully');
+      console.log('Event type:', event.type);
+      console.log('Event id:', event.id);
     } catch (err) {
-      console.error('Webhook signature verification failed:', err);
+      console.error('❌ Webhook signature verification failed:', err);
+      console.error('Error details:', err instanceof Error ? err.message : 'Unknown error');
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 400 }
@@ -39,122 +53,134 @@ export async function POST(request: NextRequest) {
     // 处理不同的事件类型
     switch (event.type) {
       case 'checkout.session.completed':
+        console.log('🎉 Processing checkout.session.completed event');
         const session = event.data.object as Stripe.Checkout.Session;
         
-        console.log('Payment successful:', {
+        console.log('Session details:', {
           sessionId: session.id,
           paymentStatus: session.payment_status,
-          metadata: session.metadata
+          metadata: session.metadata,
+          amount_total: session.amount_total,
+          customer_email: session.customer_details?.email
         });
 
         // 更新用户积分
         if (session.metadata && session.payment_status === 'paid') {
           const { packageId, credits, userId } = session.metadata;
           
+          console.log('Metadata extracted:', { packageId, credits, userId });
+          
           // 检查必要字段是否存在
           if (!packageId || !credits || !userId) {
-            console.error('Missing required metadata fields:', { packageId, credits, userId });
+            console.error('❌ Missing required metadata fields:', { packageId, credits, userId });
             break;
           }
           
           try {
             // 实际更新用户积分
             const creditsToAdd = parseInt(credits);
-            console.log(`Adding ${creditsToAdd} credits to user ${userId} for package ${packageId}`);
+            console.log(`🔄 Attempting to add ${creditsToAdd} credits to user ${userId}`);
             
             // 获取当前用户信息
             const currentUser = await dbAdmin.findById(userId);
-            if (currentUser) {
-              // 添加积分
-              const success = await dbAdmin.addCredits(userId, creditsToAdd);
+            if (!currentUser) {
+              console.error('❌ User not found:', userId);
+              break;
+            }
+            
+            console.log('📊 User before update:', {
+              id: currentUser.id,
+              email: currentUser.email,
+              credits: currentUser.credits
+            });
+            
+            // 添加积分
+            const success = await dbAdmin.addCredits(userId, creditsToAdd);
+            
+            if (success) {
+              console.log('✅ Credits added successfully');
               
-              if (success) {
-                console.log(`Successfully added ${creditsToAdd} credits to user ${userId}`);
+              // 验证更新
+              const updatedUser = await dbAdmin.findById(userId);
+              console.log('📊 User after update:', {
+                id: updatedUser?.id,
+                email: updatedUser?.email,
+                credits: updatedUser?.credits
+              });
+              
+              // 发送购买感谢邮件
+              try {
+                // 套餐名称映射
+                const packageNames = {
+                  'starter': 'スタータープラン',
+                  'standard': 'スタンダードプラン',
+                  'premium': 'プレミアムプラン'
+                };
                 
-                // 发送购买感谢邮件
-                try {
-                  // 套餐名称映射
-                  const packageNames = {
-                    'starter': 'スタータープラン',
-                    'standard': 'スタンダードプラン',
-                    'premium': 'プレミアムプラン'
-                  };
-                  
-                  const packageName = packageNames[packageId as keyof typeof packageNames] || 'プラン';
-                  
-                  // 构建购买详情
-                  const purchaseDetails = {
-                    packageName,
-                    credits: creditsToAdd,
-                    amount: session.amount_total || 0, // 日元不需要除以100
-                    sessionId: session.id,
-                    purchaseDate: new Date().toLocaleString('ja-JP', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      timeZone: 'Asia/Tokyo'
-                    })
-                  };
-                  
-                  // 发送感谢邮件
-                  const emailSent = await sendPurchaseThankYouEmail(
-                    currentUser.email,
-                    currentUser.displayName,
-                    purchaseDetails
-                  );
-                  
-                  if (emailSent) {
-                    console.log(`Purchase thank you email sent to ${currentUser.email}`);
-                  } else {
-                    console.error(`Failed to send purchase thank you email to ${currentUser.email}`);
-                  }
-                  
-                } catch (emailError) {
-                  console.error('Error sending purchase thank you email:', emailError);
+                const packageName = packageNames[packageId as keyof typeof packageNames] || 'プラン';
+                
+                // 构建购买详情
+                const purchaseDetails = {
+                  packageName,
+                  credits: creditsToAdd,
+                  amount: session.amount_total || 0,
+                  sessionId: session.id,
+                  purchaseDate: new Date().toLocaleString('ja-JP', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'Asia/Tokyo'
+                  })
+                };
+                
+                console.log('📧 Sending purchase thank you email...');
+                const emailSent = await sendPurchaseThankYouEmail(
+                  currentUser.email,
+                  currentUser.displayName,
+                  purchaseDetails
+                );
+                
+                if (emailSent) {
+                  console.log('✅ Purchase thank you email sent successfully');
+                } else {
+                  console.error('❌ Failed to send purchase thank you email');
                 }
                 
-                // 可以在这里添加支付记录到数据库
-                // await dbAdmin.createPaymentRecord({
-                //   userId,
-                //   packageId,
-                //   credits: creditsToAdd,
-                //   amount: session.amount_total,
-                //   sessionId: session.id,
-                //   status: 'completed'
-                // });
-                
-              } else {
-                console.error(`Failed to add credits to user ${userId}`);
+              } catch (emailError) {
+                console.error('❌ Error sending purchase thank you email:', emailError);
               }
+              
             } else {
-              console.error(`User ${userId} not found`);
+              console.error('❌ Failed to add credits to user database');
             }
+            
           } catch (error) {
-            console.error('Error updating user credits:', error);
+            console.error('❌ Error updating user credits:', error);
           }
+        } else {
+          console.log('⚠️ Skipping credit update - payment not completed or missing metadata');
         }
         break;
 
       case 'payment_intent.succeeded':
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('PaymentIntent succeeded:', paymentIntent.id);
+        console.log('✅ Payment intent succeeded:', event.data.object);
         break;
 
       case 'payment_intent.payment_failed':
-        const failedPayment = event.data.object as Stripe.PaymentIntent;
-        console.log('Payment failed:', failedPayment.id);
+        console.log('❌ Payment intent failed:', event.data.object);
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`ℹ️ Unhandled event type: ${event.type}`);
     }
 
+    console.log('✅ Webhook processing completed successfully');
     return NextResponse.json({ received: true });
 
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('❌ Webhook processing error:', error);
     return NextResponse.json(
       { error: 'Webhook error' },
       { status: 500 }

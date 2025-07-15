@@ -28,7 +28,7 @@
       "@/hooks/*": ["./app/hooks/*"],
       "@/api/*": ["./app/api/*"]
     },
-    "types": ["jest", "node", "@testing-library/jest-dom"],
+    "types": ["node"],
     "forceConsistentCasingInFileNames": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -56,4 +56,4 @@
     "**/*.spec.ts",
     "**/*.spec.tsx"
   ]
-} 
+}

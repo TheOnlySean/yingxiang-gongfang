@@ -1,21 +1,26 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Typography, Row, Col, message, Spin, Modal } from 'antd';
+import { Card, Button, Typography, Row, Col, Spin, Modal } from 'antd';
 import { CheckCircleOutlined, ShoppingOutlined, PlayCircleOutlined, CreditCardOutlined, WalletOutlined } from '@ant-design/icons';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function CreditsSuccessPage() {
-  const [loading, setLoading] = useState(false);
+
   const [userCredits, setUserCredits] = useState<number | null>(null);
   const [purchaseInfo, setPurchaseInfo] = useState<any>(null);
   const [showInfo, setShowInfo] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    let retryCount = 0;
+    const maxRetries = 10; // 最多重试10次
+    let initialCredits: number | null = null;
+
     const fetchUserBalance = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -32,10 +37,31 @@ export default function CreditsSuccessPage() {
 
         if (response.ok) {
           const data = await response.json();
-          setUserCredits(data.credits || 0);
+          const currentCredits = data.credits || 0;
+          
+          // 记录初始积分
+          if (initialCredits === null) {
+            initialCredits = currentCredits;
+          }
+          
+          setUserCredits(currentCredits);
+          
+          // 如果积分已经更新或者达到最大重试次数，停止重试
+          if (currentCredits > (initialCredits || 0) || retryCount >= maxRetries) {
+            setIsUpdating(false);
+            return;
+          }
+          
+          // 如果积分还没有更新，继续重试
+          retryCount++;
+          setTimeout(fetchUserBalance, 3000); // 3秒后重试
         }
       } catch (error) {
         console.error('Error fetching user balance:', error);
+        if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(fetchUserBalance, 3000);
+        }
       }
     };
 
@@ -185,7 +211,7 @@ export default function CreditsSuccessPage() {
               </Col>
               <Col>
                 <Text style={{ color: '#666', display: 'block', fontSize: '14px' }}>
-                  現在の残高
+                  現在の残高 {isUpdating && <Text style={{ color: '#1890ff', fontSize: '12px' }}>(更新中...)</Text>}
                 </Text>
                 {userCredits !== null ? (
                   <Title level={3} style={{ color: '#faad14', margin: '0' }}>

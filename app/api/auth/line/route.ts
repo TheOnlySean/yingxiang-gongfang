@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 检查用户是否已存在（通过Line ID）
-    let existingUser = await dbAdmin.getUserByLineId(lineId);
+    let existingUser = await dbAdmin.findByLineId(lineId);
     
     if (existingUser) {
       // 用户已存在，直接登录

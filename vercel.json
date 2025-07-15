@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "regions": ["nrt1", "hnd1"],
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30,
@@ -17,12 +16,6 @@
     "app/api/status/[taskId]/route.ts": {
       "maxDuration": 10,
       "memory": 256
-    }
-  },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_APP_URL": "@next-public-app-url",
-      "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@next-public-stripe-publishable-key"
     }
   },
   "headers": [

@@ -233,7 +233,7 @@ export async function loginUser(
   }
 }
 
-// 用户登出
+// 用户登出 (JWT无状态，客户端删除token即可)
 export async function logoutUser(token: string): Promise<IApiResponse<{}>> {
   try {
     const payload = verifyToken(token);
@@ -247,14 +247,7 @@ export async function logoutUser(token: string): Promise<IApiResponse<{}>> {
       };
     }
 
-    // 使会话失效
-    const tokenHash = await bcrypt.hash(token, 10);
-    const session = await dbAdmin.getSessionByTokenHash(tokenHash);
-    
-    if (session) {
-      await dbAdmin.deleteSession(session.id);
-    }
-
+    // JWT无状态认证，服务器端无需处理
     return {
       success: true,
       data: {}
@@ -341,21 +334,6 @@ export async function refreshToken(token: string): Promise<IApiResponse<{ token:
     const user = dbUserToUser(dbUser);
     const newToken = generateToken(user);
 
-    // 更新会话
-    const oldTokenHash = await bcrypt.hash(token, 10);
-    const session = await dbAdmin.getSessionByTokenHash(oldTokenHash);
-    
-    if (session) {
-      const newTokenHash = await bcrypt.hash(newToken, 10);
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-      await dbAdmin.updateSession(session.id, {
-        token_hash: newTokenHash,
-        expires_at: expiresAt.toISOString(),
-        last_activity: new Date().toISOString()
-      });
-    }
-
     return {
       success: true,
       data: { token: newToken }
@@ -372,13 +350,9 @@ export async function refreshToken(token: string): Promise<IApiResponse<{ token:
   }
 }
 
-// 清理过期会话
+// JWT无状态认证，无需清理过期会话
 export async function cleanupExpiredSessions(): Promise<void> {
-  try {
-    await dbAdmin.cleanupExpiredSessions();
-  } catch (error) {
-    console.error('Cleanup expired sessions error:', error);
-  }
+  // JWT无状态认证，服务器端无需处理会话清理
 }
 
 // 邮箱验证

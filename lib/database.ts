@@ -167,6 +167,14 @@ export const userOperations = {
         updateFields.push(`avatar_url = $${paramIndex++}`);
         values.push(userData.avatarUrl);
       }
+      if (userData.passwordResetToken !== undefined) {
+        updateFields.push(`password_reset_token = $${paramIndex++}`);
+        values.push(userData.passwordResetToken);
+      }
+      if (userData.passwordResetExpiresAt !== undefined) {
+        updateFields.push(`password_reset_expires_at = $${paramIndex++}`);
+        values.push(userData.passwordResetExpiresAt);
+      }
 
       if (updateFields.length === 0) {
         return await this.findById(id);
@@ -243,6 +251,20 @@ export const userOperations = {
       const result = await client.query(
         'SELECT * FROM users WHERE google_id = $1',
         [googleId]
+      );
+      if (result.rows.length === 0) return null;
+      return dbUserToUser(result.rows[0]);
+    } finally {
+      await client.end();
+    }
+  },
+
+  async findByLineId(lineId: string): Promise<IUser | null> {
+    const client = await createDbConnection();
+    try {
+      const result = await client.query(
+        'SELECT * FROM users WHERE line_id = $1',
+        [lineId]
       );
       if (result.rows.length === 0) return null;
       return dbUserToUser(result.rows[0]);

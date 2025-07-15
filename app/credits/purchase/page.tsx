@@ -263,7 +263,7 @@ export default function CreditsPurchasePage() {
 
         {/* 套餐选择 */}
         <Row gutter={[24, 24]} justify="center">
-          {CREDIT_PACKAGES.map((pkg, index) => (
+          {CREDIT_PACKAGES.map((pkg) => (
             <Col key={pkg.id} xs={24} sm={12} lg={8}>
               <Card
                 style={{
