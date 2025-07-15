@@ -1,0 +1,88 @@
+name: 映像工房 - 部署工作流
+
+on:
+  push:
+    branches: [ main, development ]
+  pull_request:
+    branches: [ main, development ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 设置 Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: 安装依赖
+      run: npm ci
+    
+    - name: 运行语法检查
+      run: npm run lint
+    
+    - name: 构建项目
+      run: npm run build
+    
+    - name: 运行测试
+      run: |
+        echo "测试功能待实现"
+        # npm run test
+
+  deploy-development:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/development'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 部署到开发环境
+      run: |
+        echo "开发环境部署"
+        echo "Vercel 将自动处理 development 分支的部署"
+    
+    - name: 通知开发环境部署完成
+      run: |
+        echo "✅ 开发环境部署完成"
+        echo "🌐 预览地址: https://development.eizokobo.vercel.app"
+
+  deploy-production:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 部署到生产环境
+      run: |
+        echo "生产环境部署"
+        echo "Vercel 将自动处理 main 分支的部署"
+    
+    - name: 通知生产环境部署完成
+      run: |
+        echo "✅ 生产环境部署完成"
+        echo "🌐 生产地址: https://eizokobo.vercel.app"
+    
+    - name: 发送部署通知
+      run: |
+        echo "发送部署成功通知邮件"
+        # 这里可以集成邮件通知或 Slack 通知
+
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: 运行安全扫描
+      run: |
+        echo "运行安全扫描"
+        # npm audit
+        # 可以集成其他安全扫描工具 

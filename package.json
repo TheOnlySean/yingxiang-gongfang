@@ -6,7 +6,12 @@
     "dev": "next dev -p 3003",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "env:dev": "node scripts/switch-environment.js development",
+    "env:prod": "node scripts/switch-environment.js production",
+    "deploy:dev": "npm run env:dev && npm run build",
+    "deploy:prod": "npm run env:prod && npm run build",
+    "test": "echo \"测试功能待实现\" && exit 1"
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
