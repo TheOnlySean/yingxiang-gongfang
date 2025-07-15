@@ -668,7 +668,7 @@ export async function sendPurchaseThankYouEmail(
          <div class="support-info">
            <strong>カスタマーサポート</strong><br>
            ご質問やお困りのことがございましたら、お気軽にカスタマーサポートまでお問い合わせください。<br>
-           <strong>メール：</strong> support@eizou-koubou.com<br>
+           <strong>メール：</strong> support@eizokobo.com<br>
            <strong>営業時間：</strong> 平日 9:00-18:00 (土日祝日除く)
          </div>
         

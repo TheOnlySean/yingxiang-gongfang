@@ -13,7 +13,7 @@
 ### 基本配置
 ```
 NODE_ENV=production
-NEXT_PUBLIC_APP_URL=https://eizou-koubou.vercel.app
+NEXT_PUBLIC_APP_URL=https://eizokobo.vercel.app
 NEXT_PUBLIC_APP_NAME=映像工房
 JWT_SECRET=your-secure-jwt-secret
 ```
@@ -41,7 +41,7 @@ DATABASE_URL=postgresql://your_neon_db_url
 ### 邮件服务
 ```
 SENDGRID_API_KEY=SG.your_key
-SENDGRID_FROM_EMAIL=support@eizou-koubou.com
+SENDGRID_FROM_EMAIL=support@eizokobo.com
 SENDGRID_FROM_NAME=映像工房
 ```
 
@@ -99,7 +99,7 @@ RATE_LIMIT_STATUS_PER_MINUTE=120
 
 ## 🔗 重要链接
 
-- **生产网站**: https://eizou-koubou.vercel.app
+- **生产网站**: https://eizokobo.vercel.app
 - **Vercel Dashboard**: https://vercel.com/dashboard
 - **Stripe Dashboard**: https://dashboard.stripe.com
 - **GitHub Repository**: https://github.com/TheOnlySean/yingxiang-gongfang
@@ -108,11 +108,11 @@ RATE_LIMIT_STATUS_PER_MINUTE=120
 
 1. **更新 Stripe Webhook URL**
    - 在 Stripe Dashboard 中将 webhook URL 更新为：
-   - `https://eizou-koubou.vercel.app/api/stripe/webhook`
+   - `https://eizokobo.vercel.app/api/stripe/webhook`
 
 2. **Google OAuth 重定向 URI**
    - 在 Google Cloud Console 中添加：
-   - `https://eizou-koubou.vercel.app/auth/google/callback`
+   - `https://eizokobo.vercel.app/auth/google/callback`
 
 3. **测试完整流程**
    - 注册/登录
