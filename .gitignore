@@ -261,3 +261,9 @@ $RECYCLE.BIN/
 .directory
 .Trash-* 
 .env*.local
+
+# 环境变量（不要上传真实密钥）
+.env*
+environments/*.env
+# 允许提交示例文件
+!env.example
