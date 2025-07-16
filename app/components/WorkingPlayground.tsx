@@ -5,7 +5,6 @@ import {
   Layout, Card, Button, Form, Input, Upload, message, Spin, Progress, 
   Typography, Image, Modal
 } from 'antd';
-import type { RcFile } from 'antd/es/upload';
 import { 
   VideoCameraOutlined, PictureOutlined, UserOutlined, LockOutlined,
   LogoutOutlined, InboxOutlined, EyeOutlined, DeleteOutlined, 
@@ -77,10 +76,12 @@ export default function WorkingPlayground() {
     return new Promise((resolve, reject) => {
       // 如果已经有缓存的缩略图，直接返回
       if (videoThumbnails[videoId]) {
+        console.log(`💾 Using cached thumbnail for video ${videoId}`);
         resolve(videoThumbnails[videoId]);
         return;
       }
 
+      console.log(`🎬 Generating thumbnail for video ${videoId}...`);
       const video = document.createElement('video');
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -91,28 +92,53 @@ export default function WorkingPlayground() {
       }
 
       video.crossOrigin = 'anonymous';
-      video.currentTime = 1; // 获取第1秒的帧
+      video.muted = true; // 静音以避免自动播放策略问题
       
-      video.onloadeddata = () => {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        
-        // 缓存缩略图
-        setVideoThumbnails(prev => ({
-          ...prev,
-          [videoId]: thumbnailDataUrl
-        }));
-        
-        resolve(thumbnailDataUrl);
+      // 设置超时处理
+      const timeoutId = setTimeout(() => {
+        console.error(`⏰ Thumbnail generation timeout for video ${videoId}`);
+        reject(new Error('Thumbnail generation timeout'));
+      }, 10000); // 10秒超时
+      
+      video.onloadedmetadata = () => {
+        console.log(`📊 Video metadata loaded for ${videoId}: ${video.videoWidth}x${video.videoHeight}, duration: ${video.duration}s`);
+        // 设置到第1秒或视频长度的10%，取较小值
+        const targetTime = Math.min(1, video.duration * 0.1);
+        console.log(`⏱️ Setting video time to ${targetTime}s for thumbnail`);
+        video.currentTime = targetTime;
       };
       
-      video.onerror = () => {
+      video.onseeked = () => {
+        try {
+          clearTimeout(timeoutId);
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          console.log(`✅ Thumbnail generated successfully for video ${videoId}, size: ${thumbnailDataUrl.length} bytes`);
+          
+          // 缓存缩略图
+          setVideoThumbnails(prev => ({
+            ...prev,
+            [videoId]: thumbnailDataUrl
+          }));
+          
+          resolve(thumbnailDataUrl);
+        } catch (error) {
+          clearTimeout(timeoutId);
+          console.error(`❌ Error generating thumbnail for video ${videoId}:`, error);
+          reject(error);
+        }
+      };
+      
+      video.onerror = (error) => {
+        clearTimeout(timeoutId);
+        console.error(`🚫 Video load error for ${videoId}:`, error);
         reject(new Error('Failed to load video'));
       };
       
+      console.log(`🔗 Loading video source: ${videoUrl}`);
       video.src = videoUrl;
     });
   }, [videoThumbnails]);
@@ -132,6 +158,13 @@ export default function WorkingPlayground() {
   // 检查认证状态
   const checkAuth = useCallback(async () => {
     try {
+      // 检查是否在客户端环境
+      if (typeof window === 'undefined') {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+      
       const token = localStorage.getItem('token');
       if (!token) {
         setIsAuthenticated(false);
@@ -807,7 +840,7 @@ export default function WorkingPlayground() {
           >
             <TextArea
               value={prompt}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPrompt(e.target.value)}
+              onChange={(e) => setPrompt(e.target.value)}
               placeholder="生成したい動画の内容を日本語で詳しく説明してください..."
               rows={6}
               style={{
@@ -894,8 +927,8 @@ export default function WorkingPlayground() {
               multiple={false}
               accept="image/*"
               showUploadList={false}
-              beforeUpload={(file: RcFile) => {
-                handleImageUpload(file as File);
+              beforeUpload={(file) => {
+                handleImageUpload(file);
                 return false;
               }}
               disabled={isUploading}
@@ -1253,7 +1286,7 @@ export default function WorkingPlayground() {
                       onPlay={handlePlayVideo}
                       generateThumbnail={generateVideoThumbnail}
                       downloadVideo={downloadVideo}
-                      {...(videoThumbnails[video.id] && { cachedThumbnail: videoThumbnails[video.id] })}
+                      cachedThumbnail={videoThumbnails[video.id]}
                     />
                   ))}
                       </div>
@@ -1636,6 +1669,14 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
   const [thumbnailLoading, setThumbnailLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // 监听缓存变化
+  useEffect(() => {
+    if (cachedThumbnail && cachedThumbnail !== thumbnailUrl) {
+      console.log(`✅ Using cached thumbnail for video ${video.id}`);
+      setThumbnailUrl(cachedThumbnail);
+    }
+  }, [cachedThumbnail, video.id, thumbnailUrl]);
+
   // 计算剩余天数
   const getRemainingDays = () => {
     if (!video.kieAiExpiresAt && !video.localExpiresAt) {
@@ -1657,31 +1698,62 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
     return Math.max(0, diffDays);
   };
 
-  // 鼠标悬停时自动播放
-  const handleMouseEnter = useCallback(() => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(console.error);
-    }
-  }, []);
-
-  // 鼠标离开时暂停并重置
-  const handleMouseLeave = useCallback(() => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  }, []);
-
   // 生成缩略图
   useEffect(() => {
-    if (!thumbnailUrl && video.videoUrl) {
+    if (!thumbnailUrl && video.videoUrl && !thumbnailLoading) {
+      console.log(`🎬 Starting thumbnail generation for video ${video.id}`);
       setThumbnailLoading(true);
       generateThumbnail(video.videoUrl, video.id)
-        .then(setThumbnailUrl)
-        .finally(() => setThumbnailLoading(false));
+        .then(url => {
+          console.log(`✅ Generated thumbnail for video ${video.id}:`, url ? 'Success' : 'Failed');
+          if (url) {
+            setThumbnailUrl(url);
+          }
+        })
+        .catch(error => {
+          console.error(`❌ Failed to generate thumbnail for video ${video.id}:`, error);
+          // 使用默认占位图
+          setThumbnailUrl('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzMzMzMzMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5WaWRlbzwvdGV4dD48L3N2Zz4=');
+        })
+        .finally(() => {
+          setThumbnailLoading(false);
+        });
     }
-  }, [video.videoUrl, video.id, thumbnailUrl, generateThumbnail]);
+  }, [video.videoUrl, video.id, thumbnailUrl, thumbnailLoading, generateThumbnail]);
+
+  // 处理鼠标悬停播放
+  const handleMouseEnter = () => {
+    if (videoRef.current) {
+      const currentTime = videoRef.current.currentTime;
+      const wasPaused = videoRef.current.paused;
+      const originalMuted = videoRef.current.muted;
+      
+      // 静音播放预览
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(console.error);
+      
+      // 保存原始状态
+      videoRef.current.dataset.originalTime = currentTime.toString();
+      videoRef.current.dataset.wasPaused = wasPaused.toString();
+      videoRef.current.dataset.originalMuted = originalMuted.toString();
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (videoRef.current) {
+      // 恢复原始状态
+      const originalTime = parseFloat(videoRef.current.dataset.originalTime || '0');
+      const wasPaused = videoRef.current.dataset.wasPaused === 'true';
+      const originalMuted = videoRef.current.dataset.originalMuted === 'true';
+      
+      videoRef.current.currentTime = originalTime;
+      videoRef.current.muted = originalMuted; // 恢复原始音量状态
+      
+      if (wasPaused) {
+        videoRef.current.pause();
+      }
+    }
+  };
 
   return (
     <div>
@@ -1713,44 +1785,53 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
       <div 
         style={{
           width: '100%',
+          height: '500px', // 增加高度从450px到500px
           borderRadius: '12px',
           marginBottom: '16px',
           position: 'relative',
           overflow: 'hidden',
-          background: '#000000',
-          display: 'flex',
-          justifyContent: 'center', // 居中显示视频
-          alignItems: 'center'
+          background: '#000000'
         }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
       >
         {thumbnailLoading ? (
           <div style={{
-            height: '600px',
+            height: '100%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
             <Spin size="large" />
-            </div>
+          </div>
         ) : (
           <>
-            {/* HTML5 原生视频控件 - 保持更大尺寸和hover自动播放 */}
+            {/* HTML5 原生视频控件 */}
             <video
               ref={videoRef}
               src={video.videoUrl}
               poster={thumbnailUrl}
               controls
               preload="metadata"
-              muted // 自动播放需要静音
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              onLoadedMetadata={(e) => {
+                // 确保视频元数据加载完成
+                const videoElement = e.target as HTMLVideoElement;
+                if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
+                  console.log('Desktop video metadata loaded:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+                }
+                // 确保视频默认不静音
+                videoElement.muted = false;
+              }}
+              onError={(e) => {
+                console.error('Desktop video load error:', e);
+              }}
               style={{
                 width: '100%',
-                height: '600px', // 增加高度，恢复之前的大尺寸
-                display: 'block',
-                objectFit: 'cover', // 改为cover让视频充满容器
+                height: '100%',
+                objectFit: 'contain',
                 backgroundColor: '#000',
-                borderRadius: '12px'
+                borderRadius: '12px',
+                display: 'block'
               }}
             />
             
@@ -1784,34 +1865,41 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
       </div>
       
       {/* 视频信息 */}
-      <div style={{
-        padding: '0 16px',
-        marginBottom: '16px'
-      }}>
-        <Text style={{ 
+      <div style={{ padding: '0 8px 8px' }}>
+        <Title level={5} style={{ 
           color: '#ffffff', 
-          fontSize: '16px', 
-          fontWeight: '500',
-          display: 'block',
+          margin: 0, 
           marginBottom: '8px',
-          lineHeight: '1.4'
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
         }}>
           {video.originalPrompt}
-        </Text>
+        </Title>
         
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
           alignItems: 'center',
-          marginBottom: '12px'
+          marginBottom: '8px'
         }}>
-          <Text style={{ color: '#a0a0a0', fontSize: '14px' }}>
-            {new Date(video.createdAt).toLocaleDateString('ja-JP', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric'
-            })}
-          </Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Text style={{ color: '#a0a0a0', fontSize: '12px' }}>
+              {new Date(video.createdAt).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </Text>
+            <Text style={{ 
+              color: getRemainingDays() <= 3 ? '#ff4d4f' : '#a0a0a0', 
+              fontSize: '12px' 
+            }}>
+              あと{getRemainingDays()}日保存
+            </Text>
+          </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Text style={{ 
@@ -1858,8 +1946,24 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
             )}
             </div>
           </div>
-        </div>
-      </Card>
+        
+        {/* 移除翻译内容显示 */}
+        {false && video.translatedPrompt && video.translatedPrompt !== video.originalPrompt && (
+          <Text style={{ 
+            color: '#a0a0a0', 
+            fontSize: '11px',
+            fontStyle: 'italic',
+            display: 'block',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            翻訳: {video.translatedPrompt}
+          </Text>
+        )}
+      </div>
+    </Card>
+
     </div>
   );
 }
