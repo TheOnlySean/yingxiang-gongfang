@@ -72,6 +72,11 @@ export default function WorkingPlaygroundMobile() {
   // 加载视频历史
   const loadVideoHistory = useCallback(async () => {
     if (!user) return;
+    
+    // 检查是否在客户端环境
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     setIsLoadingHistory(true);
     try {
@@ -110,6 +115,11 @@ export default function WorkingPlaygroundMobile() {
 
     if (file.size > 10 * 1024 * 1024) {
       message.error('ファイルサイズは10MB以下にしてください');
+      return;
+    }
+
+    // 检查是否在客户端环境
+    if (typeof window === 'undefined') {
       return;
     }
 
@@ -175,6 +185,12 @@ export default function WorkingPlaygroundMobile() {
       setShowInsufficientCreditsModal(true);
       return;
     }
+    
+    // 检查是否在客户端环境
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     setIsGenerating(true);
     setGenerationProgress(0);
     setGenerationStage('preparing');
@@ -239,6 +255,14 @@ export default function WorkingPlaygroundMobile() {
   const checkAuth = useCallback(async () => {
     console.log('🔍 WorkingPlaygroundMobile - checkAuth 开始');
     try {
+      // 检查是否在客户端环境
+      if (typeof window === 'undefined') {
+        console.log('🖥️ 服务器端环境，设置为未认证状态');
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+      
       const token = localStorage.getItem('token');
       console.log('📱 Token from localStorage:', token ? 'Token存在' : 'Token为空');
       
@@ -364,6 +388,11 @@ export default function WorkingPlaygroundMobile() {
         return;
       }
       try {
+        // 检查是否在客户端环境
+        if (typeof window === 'undefined') {
+          return;
+        }
+        
         const token = localStorage.getItem('token');
         const response = await fetch(`/api/status/${taskId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -409,6 +438,12 @@ export default function WorkingPlaygroundMobile() {
   // 3. 完全同步桌面端的refreshHistoryInternal逻辑
   const refreshHistoryInternal = useCallback(async (isManualRefresh: boolean = true) => {
     if (isUpdating) return;
+    
+    // 检查是否在客户端环境
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     setIsUpdating(true);
     try {
       const token = localStorage.getItem('token');
