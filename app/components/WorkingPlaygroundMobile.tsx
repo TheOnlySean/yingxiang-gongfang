@@ -1037,15 +1037,16 @@ export default function WorkingPlaygroundMobile() {
                             width: '60px',
                             height: '60px',
                             borderRadius: '50%',
-                            background: 'rgba(255, 255, 255, 0.9)',
+                            background: 'rgba(0, 0, 0, 0.7)', // 改为黑色半透明背景
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                            border: '2px solid #ffffff', // 添加白色边框
                           }}>
                             <PlayCircleOutlined style={{
                               fontSize: '32px',
-                              color: '#e60033',
+                              color: '#ffffff', // 改为白色图标
                               marginLeft: '4px' // 调整播放图标位置
                             }} />
                           </div>
