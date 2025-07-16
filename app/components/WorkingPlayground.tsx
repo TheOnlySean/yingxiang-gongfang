@@ -1505,7 +1505,7 @@ export default function WorkingPlayground() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* HTML5 视频播放器 */}
+            {/* HTML5 原生视频播放器 */}
             <div style={{ 
               position: 'relative', 
               marginBottom: '12px',
@@ -1514,8 +1514,8 @@ export default function WorkingPlayground() {
               alignItems: 'center'
             }}>
               <video
-                ref={videoPlayerRef}
                 src={currentPlayingVideo.videoUrl}
+                controls
                 style={{ 
                   width: 'auto',
                   maxWidth: '80vw',
@@ -1524,102 +1524,33 @@ export default function WorkingPlayground() {
                   borderRadius: '12px',
                   display: 'block'
                 }}
-                onTimeUpdate={handleVideoTimeUpdate}
-                onLoadedMetadata={handleVideoLoadedMetadata}
-                onEnded={handleVideoEnded}
-                onPlay={() => setIsVideoPlaying(true)}
-                onPause={() => setIsVideoPlaying(false)}
               />
               
-              {/* 自定义控制栏 */}
+              {/* 下载按钮 */}
               <div style={{
                 position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.8))',
-                borderBottomLeftRadius: '12px',
-                borderBottomRightRadius: '12px',
-                padding: '16px'
+                top: '10px',
+                right: '10px',
+                zIndex: 1002
               }}>
-                {/* 进度条 */}
-                <div style={{ marginBottom: '12px' }}>
-                  <input
-                    type="range"
-                    min="0"
-                    max={videoDuration || 0}
-                    value={videoCurrentTime}
-                    onChange={handleVideoSeek}
-                    style={{
-                      width: '100%',
-                      height: '4px',
-                      background: 'rgba(255, 255, 255, 0.3)',
-                      borderRadius: '2px',
-                      cursor: 'pointer'
-                    }}
-                  />
-            </div>
-            
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Button
-                      type="text"
-                      icon={isVideoPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
-                      onClick={handleVideoPlayPause}
-                      style={{ color: '#ffffff', fontSize: '24px', padding: '4px' }}
-                    />
-                    
-                    <Text style={{ color: '#ffffff', fontSize: '14px' }}>
-                      {Math.floor(videoCurrentTime / 60)}:{Math.floor(videoCurrentTime % 60).toString().padStart(2, '0')} / {Math.floor(videoDuration / 60)}:{Math.floor(videoDuration % 60).toString().padStart(2, '0')}
-                    </Text>
-                  </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Button
-                      type="text"
-                      icon={isVideoMuted ? <MutedOutlined /> : <SoundOutlined />}
-                      onClick={handleVideoMuteToggle}
-                      style={{ color: '#ffffff', fontSize: '16px', padding: '4px' }}
-                    />
-                    
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={videoVolume}
-                      onChange={handleVolumeChange}
-                      style={{ width: '60px' }}
-                    />
-                    
-                    <Button
-                      type="text"
-                      icon={<FullscreenOutlined />}
-                      onClick={() => {
-                        if (videoPlayerRef.current?.requestFullscreen) {
-                          videoPlayerRef.current.requestFullscreen();
-                        }
-                      }}
-                      style={{ color: '#ffffff', fontSize: '16px', padding: '4px' }}
-                    />
-                    
-                    <Button
-                      type="text"
-                      icon={<DownloadOutlined />}
-                      onClick={() => {
-                        if (currentPlayingVideo.videoUrl) {
-                          const filename = `${currentPlayingVideo.originalPrompt.substring(0, 20)}_${new Date().getTime()}.mp4`;
-                          downloadVideo(currentPlayingVideo.videoUrl, filename);
-                        }
-                      }}
-                      style={{ color: '#ffffff', fontSize: '16px', padding: '4px' }}
-                    />
-                  </div>
-                </div>
+                <Button
+                  type="text"
+                  icon={<DownloadOutlined />}
+                  onClick={() => {
+                    if (currentPlayingVideo.videoUrl) {
+                      const filename = `${currentPlayingVideo.originalPrompt.substring(0, 20)}_${new Date().getTime()}.mp4`;
+                      downloadVideo(currentPlayingVideo.videoUrl, filename);
+                    }
+                  }}
+                  style={{ 
+                    color: '#ffffff', 
+                    fontSize: '20px', 
+                    padding: '8px',
+                    background: 'rgba(0, 0, 0, 0.6)',
+                    borderRadius: '8px',
+                    border: 'none'
+                  }}
+                />
               </div>
             </div>
             

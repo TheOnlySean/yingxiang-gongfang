@@ -306,14 +306,47 @@ export default function WorkingPlaygroundMobile() {
   };
 
   // 下载视频
-  const downloadVideo = (video: IVideo) => {
-    if (video.videoUrl) {
+  const downloadVideo = useCallback(async (video: IVideo) => {
+    try {
+      if (!video.videoUrl) {
+        message.error('動画URLが見つかりません');
+        return;
+      }
+
+      message.loading('ダウンロード準備中...', 0.5);
+      
+      // 获取视频文件
+      const response = await fetch(video.videoUrl);
+      if (!response.ok) {
+        throw new Error('ダウンロードに失敗しました');
+      }
+      
+      // 创建 blob
+      const blob = await response.blob();
+      
+      // 创建下载链接
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = video.videoUrl;
-      link.download = `video_${video.id}.mp4`;
+      link.href = url;
+      
+      // 设置文件名
+      const filename = `${video.originalPrompt.substring(0, 20)}_${new Date().getTime()}.mp4`;
+      link.download = filename;
+      
+      // 触发下载
+      document.body.appendChild(link);
       link.click();
+      
+      // 清理
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      message.success('ダウンロードが開始されました');
+    } catch (error) {
+      console.error('Download error:', error);
+      message.error('ダウンロードに失敗しました');
     }
-  };
+  }, []);
 
   // 处理认证成功 - 现在简化为跳转到登录页面
 
