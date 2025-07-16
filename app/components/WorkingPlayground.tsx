@@ -1634,16 +1634,6 @@ interface VideoHistoryCardProps {
 function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumbnail, downloadVideo }: VideoHistoryCardProps) {
   const [thumbnailUrl, setThumbnailUrl] = useState<string>(cachedThumbnail || '');
   const [thumbnailLoading, setThumbnailLoading] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [videoDimensions, setVideoDimensions] = useState({ width: 0, height: 0 });
-  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
-  const previewVideoRef = useRef<HTMLVideoElement>(null);
 
   // 计算剩余天数
   const getRemainingDays = () => {
@@ -1666,20 +1656,6 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
     return Math.max(0, diffDays);
   };
 
-  // 监听窗口大小变化
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-
-    if (typeof window !== 'undefined') {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-    return undefined;
-  }, []);
-
   // 生成缩略图
   useEffect(() => {
     if (!thumbnailUrl && video.videoUrl) {
@@ -1698,132 +1674,6 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
         });
     }
   }, [video.videoUrl, video.id, thumbnailUrl, generateThumbnail]);
-
-  // 处理鼠标悬停
-  const handleMouseEnter = useCallback(() => {
-    setIsHovering(true);
-    if (previewVideoRef.current && videoLoaded) {
-      previewVideoRef.current.currentTime = 0;
-      previewVideoRef.current.play().catch(error => {
-        console.error('Error playing preview video:', error);
-      });
-    }
-  }, [videoLoaded]);
-
-  const handleMouseLeave = useCallback(() => {
-    setIsHovering(false);
-    setIsPlaying(false);
-    if (previewVideoRef.current) {
-      previewVideoRef.current.pause();
-      previewVideoRef.current.currentTime = 0;
-    }
-  }, []);
-
-  // 视频加载完成
-  const handleVideoLoaded = useCallback(() => {
-    setVideoLoaded(true);
-    if (previewVideoRef.current) {
-      previewVideoRef.current.currentTime = 0;
-      setDuration(previewVideoRef.current.duration);
-      // 获取视频真实尺寸
-      setVideoDimensions({
-        width: previewVideoRef.current.videoWidth,
-        height: previewVideoRef.current.videoHeight
-      });
-    }
-  }, []);
-
-  // 视频播放控制
-  const handlePlayPause = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (previewVideoRef.current) {
-      if (isPlaying) {
-        previewVideoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        previewVideoRef.current.play().catch(error => {
-          console.error('Error playing video:', error);
-        });
-        setIsPlaying(true);
-      }
-    }
-  }, [isPlaying]);
-
-  // 静音控制
-  const handleMuteToggle = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (previewVideoRef.current) {
-      previewVideoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  }, [isMuted]);
-
-
-
-  // 进度控制
-  const handleTimeUpdate = useCallback(() => {
-    if (previewVideoRef.current) {
-      setCurrentTime(previewVideoRef.current.currentTime);
-    }
-  }, []);
-
-  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
-    const newTime = parseFloat(e.target.value);
-    setCurrentTime(newTime);
-    if (previewVideoRef.current) {
-      previewVideoRef.current.currentTime = newTime;
-    }
-  }, []);
-
-  // 全屏控制
-  const handleFullscreen = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (previewVideoRef.current) {
-      if (previewVideoRef.current.requestFullscreen) {
-        previewVideoRef.current.requestFullscreen();
-      }
-    }
-  }, []);
-
-  // 格式化时间
-  const formatTime = useCallback((seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }, []);
-
-  // 计算可用宽度
-  const getAvailableWidth = useCallback(() => {
-    if (windowSize.width > 0) {
-      return windowSize.width - 450 - 48 - 24; // 450是左侧面板，48是padding，24是滚动条
-    }
-    return 800; // 默认值
-  }, [windowSize.width]);
-
-  // 计算视频预览的尺寸（保持原始比例）
-  const getVideoPreviewDimensions = useCallback(() => {
-    if (videoDimensions.width && videoDimensions.height) {
-      const availableWidth = getAvailableWidth();
-      
-      // 如果视频原始宽度适合显示，就用原始尺寸
-      if (videoDimensions.width <= availableWidth) {
-        return {
-          width: videoDimensions.width,
-          height: videoDimensions.height
-        };
-      }
-      
-      // 否则按比例缩放，但保持宽高比
-      const aspectRatio = videoDimensions.height / videoDimensions.width;
-      const scaledWidth = availableWidth;
-      return {
-        width: scaledWidth,
-        height: scaledWidth * aspectRatio
-      };
-    }
-    return { width: 800, height: 450 }; // 默认16:9比例
-  }, [videoDimensions, getAvailableWidth]);
 
   return (
     <div>
@@ -1857,7 +1707,6 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
           width: '100%',
           borderRadius: '12px',
           marginBottom: '16px',
-          cursor: 'pointer',
           position: 'relative',
           overflow: 'hidden',
           background: '#000000',
@@ -1865,9 +1714,6 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
           justifyContent: 'center', // 居中显示视频
           alignItems: 'center'
         }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onClick={() => onPlay(video)}
       >
         {thumbnailLoading ? (
           <div style={{
@@ -1880,138 +1726,47 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
             </div>
         ) : (
           <>
-            {/* 实际的视频元素 */}
+            {/* HTML5 原生视频控件 */}
             <video
-              ref={previewVideoRef}
               src={video.videoUrl}
               poster={thumbnailUrl}
-              muted={isMuted}
-              loop
+              controls
               preload="metadata"
-              onLoadedMetadata={handleVideoLoaded}
-              onTimeUpdate={handleTimeUpdate}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onLoadedData={() => {
-                // 设置默认音量
-                if (previewVideoRef.current) {
-                  previewVideoRef.current.volume = 0.5;
-                }
-              }}
               style={{
-                width: videoLoaded ? `${getVideoPreviewDimensions().width}px` : '100%',
-                height: videoLoaded ? `${getVideoPreviewDimensions().height}px` : '450px',
+                width: '100%',
+                height: '450px',
                 display: 'block',
                 objectFit: 'contain', // 保持原始比例，不裁剪
-                backgroundColor: '#000' // 给视频添加黑色背景
+                backgroundColor: '#000', // 给视频添加黑色背景
+                borderRadius: '12px'
               }}
             />
             
-            {/* 悬停时显示的播放图标 */}
-            {!isHovering && (
-            <div style={{ 
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'rgba(0, 0, 0, 0.3)',
-              display: 'flex', 
-                alignItems: 'center',
-              justifyContent: 'center'
+            {/* 全屏播放按钮 */}
+            <div style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              zIndex: 1002
             }}>
-                <PlayCircleOutlined style={{
-                  fontSize: '64px',
-                  color: '#ffffff',
-                  filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))'
-                }} />
-              </div>
-            )}
-            
-            {/* 悬停时显示的控制栏 */}
-            {isHovering && (
-              <div style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.8))',
-                padding: '16px'
-              }}>
-                {/* 简化的进度条 */}
-                <div style={{ marginBottom: '8px' }}>
-                  <input
-                    type="range"
-                    min="0"
-                    max={duration || 0}
-                    value={currentTime}
-                    onChange={handleSeek}
-                    style={{
-                      width: '100%',
-                      height: '4px',
-                      background: 'rgba(255, 255, 255, 0.3)',
-                      borderRadius: '2px',
-                      cursor: 'pointer'
-                    }}
-                  />
-                </div>
-                
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Button
-                      type="text"
-                      icon={isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
-                      onClick={handlePlayPause}
-                      style={{ color: '#ffffff', fontSize: '18px', padding: '4px' }}
-                    />
-                    
-                    <Text style={{ color: '#ffffff', fontSize: '12px' }}>
-                      {formatTime(currentTime)} / {formatTime(duration)}
-                    </Text>
-                  </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Button
-                      type="text"
-                      icon={isMuted ? <MutedOutlined /> : <SoundOutlined />}
-                      onClick={handleMuteToggle}
-                      style={{ 
-                        color: '#ffffff', 
-                        fontSize: '16px', 
-                        padding: '4px',
-                        background: isMuted ? 'rgba(255, 77, 79, 0.2)' : 'rgba(24, 144, 255, 0.2)',
-                        borderRadius: '4px',
-                        transition: 'all 0.2s ease'
-                      }}
-                    />
-                    
-                    <Button
-                      type="text"
-                      icon={<FullscreenOutlined />}
-                      onClick={handleFullscreen}
-                      style={{ color: '#ffffff', fontSize: '16px', padding: '4px' }}
-                    />
-                    
-                    <Button
-                      type="text"
-                      icon={<DownloadOutlined />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (video.videoUrl) {
-                          const filename = `${video.originalPrompt.substring(0, 20)}_${new Date().getTime()}.mp4`;
-                          downloadVideo(video.videoUrl, filename);
-                        }
-                      }}
-                      style={{ color: '#ffffff', fontSize: '16px', padding: '4px' }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+              <Button
+                type="text"
+                icon={<FullscreenOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPlay(video);
+                }}
+                style={{ 
+                  color: '#ffffff', 
+                  fontSize: '20px', 
+                  padding: '8px',
+                  background: 'rgba(0, 0, 0, 0.6)',
+                  borderRadius: '8px',
+                  border: 'none'
+                }}
+                title="全屏播放"
+              />
+            </div>
           </>
         )}
       </div>
