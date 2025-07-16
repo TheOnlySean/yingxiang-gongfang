@@ -1775,7 +1775,7 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
   const [isHovering, setIsHovering] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -2030,6 +2030,12 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
               onTimeUpdate={handleTimeUpdate}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
+              onLoadedData={() => {
+                // 设置默认音量
+                if (previewVideoRef.current) {
+                  previewVideoRef.current.volume = 0.5;
+                }
+              }}
               style={{
                 width: videoLoaded ? `${getVideoPreviewDimensions().width}px` : '100%',
                 height: videoLoaded ? `${getVideoPreviewDimensions().height}px` : '450px',
@@ -2111,26 +2117,14 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
                       type="text"
                       icon={isMuted ? <MutedOutlined /> : <SoundOutlined />}
                       onClick={handleMuteToggle}
-                      style={{ color: '#ffffff', fontSize: '16px', padding: '4px' }}
-                    />
-                    
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      defaultValue="0.5"
-                      onChange={(e) => {
-                        e.stopPropagation(); // 阻止事件冒泡
-                        const volume = parseFloat(e.target.value);
-                        if (previewVideoRef.current) {
-                          previewVideoRef.current.volume = volume;
-                        }
+                      style={{ 
+                        color: '#ffffff', 
+                        fontSize: '16px', 
+                        padding: '4px',
+                        background: isMuted ? 'rgba(255, 77, 79, 0.2)' : 'rgba(24, 144, 255, 0.2)',
+                        borderRadius: '4px',
+                        transition: 'all 0.2s ease'
                       }}
-                      onClick={(e) => e.stopPropagation()} // 阻止点击事件冒泡
-                      onMouseDown={(e) => e.stopPropagation()} // 阻止鼠标按下事件冒泡
-                      onPointerDown={(e) => e.stopPropagation()} // 阻止指针按下事件冒泡
-                      style={{ width: '60px' }}
                     />
                     
                     <Button
