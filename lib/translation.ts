@@ -235,12 +235,12 @@ export async function translatePrompt(
       };
     }
 
-    if (originalPrompt.length > 1000) {
+    if (originalPrompt.length > 6000) {
       return {
         success: false,
         error: {
           code: API_ERROR_CODES.VALIDATION_ERROR,
-          message: 'Prompt too long (max 1000 characters)'
+          message: 'Prompt too long (max 6000 characters)'
         }
       };
     }

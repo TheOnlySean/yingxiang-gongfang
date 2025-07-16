@@ -316,7 +316,7 @@ export interface IUserStats {
 
 // 导出默认配置
 export const DEFAULT_CONFIG: IAppConfig = {
-  maxPromptLength: 1000,
+  maxPromptLength: 6000,
   maxImageSize: 10 * 1024 * 1024, // 10MB
   supportedImageFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
   creditPackages: [
