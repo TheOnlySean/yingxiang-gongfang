@@ -258,16 +258,28 @@ export default function MobileVideoHistory({
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0, 0, 0, 0.3)',
+            background: 'rgba(0, 0, 0, 0.4)', // 增加背景透明度
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <PlayCircleOutlined style={{
-              fontSize: '48px',
-              color: '#ffffff',
-              filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))'
-            }} />
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              background: 'rgba(230, 0, 51, 0.9)', // 使用品牌红色背景
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)', // 增强阴影
+              border: '2px solid rgba(255, 255, 255, 0.8)', // 添加白色边框
+            }}>
+              <PlayCircleOutlined style={{
+                fontSize: '36px', // 增大图标
+                color: '#ffffff', // 改为白色图标
+                marginLeft: '4px' // 调整播放图标位置
+              }} />
+            </div>
           </div>
         </div>
 

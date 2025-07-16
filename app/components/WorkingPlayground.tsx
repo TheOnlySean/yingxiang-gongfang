@@ -8,7 +8,7 @@ import {
 import { 
   VideoCameraOutlined, PictureOutlined, UserOutlined, LockOutlined,
   LogoutOutlined, InboxOutlined, EyeOutlined, DeleteOutlined, 
-  FullscreenOutlined, DownloadOutlined,
+  FullscreenOutlined, DownloadOutlined, PlayCircleOutlined,
   HistoryOutlined, ReloadOutlined, ThunderboltOutlined, CreditCardOutlined
 } from '@ant-design/icons';
 import { IUser, IVideo, IUploadedImage } from '@/types';
@@ -76,10 +76,12 @@ export default function WorkingPlayground() {
     return new Promise((resolve, reject) => {
       // 如果已经有缓存的缩略图，直接返回
       if (videoThumbnails[videoId]) {
+        console.log(`💾 Using cached thumbnail for video ${videoId}`);
         resolve(videoThumbnails[videoId]);
         return;
       }
 
+      console.log(`🎬 Generating thumbnail for video ${videoId}...`);
       const video = document.createElement('video');
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -90,28 +92,53 @@ export default function WorkingPlayground() {
       }
 
       video.crossOrigin = 'anonymous';
-      video.currentTime = 1; // 获取第1秒的帧
+      video.muted = true; // 静音以避免自动播放策略问题
       
-      video.onloadeddata = () => {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        
-        // 缓存缩略图
-        setVideoThumbnails(prev => ({
-          ...prev,
-          [videoId]: thumbnailDataUrl
-        }));
-        
-        resolve(thumbnailDataUrl);
+      // 设置超时处理
+      const timeoutId = setTimeout(() => {
+        console.error(`⏰ Thumbnail generation timeout for video ${videoId}`);
+        reject(new Error('Thumbnail generation timeout'));
+      }, 10000); // 10秒超时
+      
+      video.onloadedmetadata = () => {
+        console.log(`📊 Video metadata loaded for ${videoId}: ${video.videoWidth}x${video.videoHeight}, duration: ${video.duration}s`);
+        // 设置到第1秒或视频长度的10%，取较小值
+        const targetTime = Math.min(1, video.duration * 0.1);
+        console.log(`⏱️ Setting video time to ${targetTime}s for thumbnail`);
+        video.currentTime = targetTime;
       };
       
-      video.onerror = () => {
+      video.onseeked = () => {
+        try {
+          clearTimeout(timeoutId);
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          console.log(`✅ Thumbnail generated successfully for video ${videoId}, size: ${thumbnailDataUrl.length} bytes`);
+          
+          // 缓存缩略图
+          setVideoThumbnails(prev => ({
+            ...prev,
+            [videoId]: thumbnailDataUrl
+          }));
+          
+          resolve(thumbnailDataUrl);
+        } catch (error) {
+          clearTimeout(timeoutId);
+          console.error(`❌ Error generating thumbnail for video ${videoId}:`, error);
+          reject(error);
+        }
+      };
+      
+      video.onerror = (error) => {
+        clearTimeout(timeoutId);
+        console.error(`🚫 Video load error for ${videoId}:`, error);
         reject(new Error('Failed to load video'));
       };
       
+      console.log(`🔗 Loading video source: ${videoUrl}`);
       video.src = videoUrl;
     });
   }, [videoThumbnails]);
@@ -1259,7 +1286,7 @@ export default function WorkingPlayground() {
                       onPlay={handlePlayVideo}
                       generateThumbnail={generateVideoThumbnail}
                       downloadVideo={downloadVideo}
-                      {...(videoThumbnails[video.id] && { cachedThumbnail: videoThumbnails[video.id] })}
+                      cachedThumbnail={videoThumbnails[video.id]}
                     />
                   ))}
                       </div>
@@ -1640,6 +1667,16 @@ interface VideoHistoryCardProps {
 function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumbnail, downloadVideo }: VideoHistoryCardProps) {
   const [thumbnailUrl, setThumbnailUrl] = useState<string>(cachedThumbnail || '');
   const [thumbnailLoading, setThumbnailLoading] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // 监听缓存变化
+  useEffect(() => {
+    if (cachedThumbnail && cachedThumbnail !== thumbnailUrl) {
+      console.log(`✅ Using cached thumbnail for video ${video.id}`);
+      setThumbnailUrl(cachedThumbnail);
+    }
+  }, [cachedThumbnail, video.id, thumbnailUrl]);
 
   // 计算剩余天数
   const getRemainingDays = () => {
@@ -1664,14 +1701,18 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
 
   // 生成缩略图
   useEffect(() => {
-    if (!thumbnailUrl && video.videoUrl) {
+    if (!thumbnailUrl && video.videoUrl && !thumbnailLoading) {
+      console.log(`🎬 Starting thumbnail generation for video ${video.id}`);
       setThumbnailLoading(true);
       generateThumbnail(video.videoUrl, video.id)
         .then(url => {
-          setThumbnailUrl(url);
+          console.log(`✅ Generated thumbnail for video ${video.id}:`, url ? 'Success' : 'Failed');
+          if (url) {
+            setThumbnailUrl(url);
+          }
         })
         .catch(error => {
-          console.error('Failed to generate thumbnail:', error);
+          console.error(`❌ Failed to generate thumbnail for video ${video.id}:`, error);
           // 使用默认占位图
           setThumbnailUrl('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzMzMzMzMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5WaWRlbzwvdGV4dD48L3N2Zz4=');
         })
@@ -1679,7 +1720,43 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
           setThumbnailLoading(false);
         });
     }
-  }, [video.videoUrl, video.id, thumbnailUrl, generateThumbnail]);
+  }, [video.videoUrl, video.id, thumbnailUrl, thumbnailLoading, generateThumbnail]);
+
+  // 处理鼠标悬停播放
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    if (videoRef.current) {
+      const currentTime = videoRef.current.currentTime;
+      const wasPaused = videoRef.current.paused;
+      const originalMuted = videoRef.current.muted;
+      
+      // 静音播放预览
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(console.error);
+      
+      // 保存原始状态
+      videoRef.current.dataset.originalTime = currentTime.toString();
+      videoRef.current.dataset.wasPaused = wasPaused.toString();
+      videoRef.current.dataset.originalMuted = originalMuted.toString();
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    if (videoRef.current) {
+      // 恢复原始状态
+      const originalTime = parseFloat(videoRef.current.dataset.originalTime || '0');
+      const wasPaused = videoRef.current.dataset.wasPaused === 'true';
+      const originalMuted = videoRef.current.dataset.originalMuted === 'true';
+      
+      videoRef.current.currentTime = originalTime;
+      videoRef.current.muted = originalMuted; // 恢复原始音量状态
+      
+      if (wasPaused) {
+        videoRef.current.pause();
+      }
+    }
+  };
 
   return (
     <div>
@@ -1711,40 +1788,53 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
       <div 
         style={{
           width: '100%',
+          height: '500px', // 增加高度从450px到500px
           borderRadius: '12px',
           marginBottom: '16px',
           position: 'relative',
           overflow: 'hidden',
-          background: '#000000',
-          display: 'flex',
-          justifyContent: 'center', // 居中显示视频
-          alignItems: 'center'
+          background: '#000000'
         }}
       >
         {thumbnailLoading ? (
           <div style={{
-            height: '450px',
+            height: '100%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
             <Spin size="large" />
-            </div>
+          </div>
         ) : (
           <>
             {/* HTML5 原生视频控件 */}
             <video
+              ref={videoRef}
               src={video.videoUrl}
               poster={thumbnailUrl}
               controls
               preload="metadata"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              onLoadedMetadata={(e) => {
+                // 确保视频元数据加载完成
+                const videoElement = e.target as HTMLVideoElement;
+                if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
+                  console.log('Desktop video metadata loaded:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+                }
+                // 确保视频默认不静音
+                videoElement.muted = false;
+              }}
+              onError={(e) => {
+                console.error('Desktop video load error:', e);
+              }}
               style={{
                 width: '100%',
-                height: '450px',
-                display: 'block',
-                objectFit: 'contain', // 保持原始比例，不裁剪
-                backgroundColor: '#000', // 给视频添加黑色背景
-                borderRadius: '12px'
+                height: '100%',
+                objectFit: 'contain',
+                backgroundColor: '#000',
+                borderRadius: '12px',
+                display: 'block'
               }}
             />
             

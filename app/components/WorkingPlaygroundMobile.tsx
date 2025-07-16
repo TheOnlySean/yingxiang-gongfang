@@ -1047,6 +1047,14 @@ export default function WorkingPlaygroundMobile() {
                           muted
                           preload="metadata"
                           poster={video.thumbnailUrl}
+                          onLoadedMetadata={(e) => {
+                            // 确保视频元数据加载完成
+                            const videoElement = e.target as HTMLVideoElement;
+                            console.log('Mobile video metadata loaded:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+                          }}
+                          onError={(e) => {
+                            console.error('Mobile video load error:', e);
+                          }}
                           style={{
                             width: '100%',
                             height: '100%',
@@ -1062,25 +1070,26 @@ export default function WorkingPlaygroundMobile() {
                           left: 0,
                           right: 0,
                           bottom: 0,
-                          background: 'rgba(0, 0, 0, 0.3)',
+                          background: 'rgba(0, 0, 0, 0.4)', // 增加背景透明度
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           transition: 'opacity 0.2s ease',
                         }}>
                           <div style={{
-                            width: '60px',
-                            height: '60px',
+                            width: '64px', // 稍微增大按钮
+                            height: '64px',
                             borderRadius: '50%',
-                            background: 'rgba(255, 255, 255, 0.9)',
+                            background: 'rgba(230, 0, 51, 0.9)', // 使用品牌红色背景
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)', // 增强阴影
+                            border: '2px solid rgba(255, 255, 255, 0.8)', // 添加白色边框
                           }}>
                             <PlayCircleOutlined style={{
-                              fontSize: '32px',
-                              color: '#e60033',
+                              fontSize: '36px', // 增大图标
+                              color: '#ffffff', // 改为白色图标
                               marginLeft: '4px' // 调整播放图标位置
                             }} />
                           </div>
