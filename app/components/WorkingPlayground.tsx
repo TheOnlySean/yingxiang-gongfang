@@ -5,6 +5,7 @@ import {
   Layout, Card, Button, Form, Input, Upload, message, Spin, Progress, 
   Typography, Image, Modal
 } from 'antd';
+import type { RcFile } from 'antd/es/upload';
 import { 
   VideoCameraOutlined, PictureOutlined, UserOutlined, LockOutlined,
   LogoutOutlined, InboxOutlined, EyeOutlined, DeleteOutlined, 
@@ -806,7 +807,7 @@ export default function WorkingPlayground() {
           >
             <TextArea
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPrompt(e.target.value)}
               placeholder="生成したい動画の内容を日本語で詳しく説明してください..."
               rows={6}
               style={{
@@ -893,8 +894,8 @@ export default function WorkingPlayground() {
               multiple={false}
               accept="image/*"
               showUploadList={false}
-              beforeUpload={(file) => {
-                handleImageUpload(file);
+              beforeUpload={(file: RcFile) => {
+                handleImageUpload(file as File);
                 return false;
               }}
               disabled={isUploading}
@@ -1633,6 +1634,7 @@ interface VideoHistoryCardProps {
 function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumbnail, downloadVideo }: VideoHistoryCardProps) {
   const [thumbnailUrl, setThumbnailUrl] = useState<string>(cachedThumbnail || '');
   const [thumbnailLoading, setThumbnailLoading] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // 计算剩余天数
   const getRemainingDays = () => {
@@ -1655,22 +1657,29 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
     return Math.max(0, diffDays);
   };
 
+  // 鼠标悬停时自动播放
+  const handleMouseEnter = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(console.error);
+    }
+  }, []);
+
+  // 鼠标离开时暂停并重置
+  const handleMouseLeave = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  }, []);
+
   // 生成缩略图
   useEffect(() => {
     if (!thumbnailUrl && video.videoUrl) {
       setThumbnailLoading(true);
       generateThumbnail(video.videoUrl, video.id)
-        .then(url => {
-          setThumbnailUrl(url);
-        })
-        .catch(error => {
-          console.error('Failed to generate thumbnail:', error);
-          // 使用默认占位图
-          setThumbnailUrl('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzMzMzMzMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5WaWRlbzwvdGV4dD48L3N2Zz4=');
-        })
-        .finally(() => {
-          setThumbnailLoading(false);
-        });
+        .then(setThumbnailUrl)
+        .finally(() => setThumbnailLoading(false));
     }
   }, [video.videoUrl, video.id, thumbnailUrl, generateThumbnail]);
 
@@ -1713,10 +1722,12 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
           justifyContent: 'center', // 居中显示视频
           alignItems: 'center'
         }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {thumbnailLoading ? (
           <div style={{
-            height: '450px',
+            height: '600px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -1725,18 +1736,20 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
             </div>
         ) : (
           <>
-            {/* HTML5 原生视频控件 */}
+            {/* HTML5 原生视频控件 - 保持更大尺寸和hover自动播放 */}
             <video
+              ref={videoRef}
               src={video.videoUrl}
               poster={thumbnailUrl}
               controls
               preload="metadata"
+              muted // 自动播放需要静音
               style={{
                 width: '100%',
-                height: '450px',
+                height: '600px', // 增加高度，恢复之前的大尺寸
                 display: 'block',
-                objectFit: 'contain', // 保持原始比例，不裁剪
-                backgroundColor: '#000', // 给视频添加黑色背景
+                objectFit: 'cover', // 改为cover让视频充满容器
+                backgroundColor: '#000',
                 borderRadius: '12px'
               }}
             />
@@ -1771,41 +1784,34 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
       </div>
       
       {/* 视频信息 */}
-      <div style={{ padding: '0 8px 8px' }}>
-        <Title level={5} style={{ 
+      <div style={{
+        padding: '0 16px',
+        marginBottom: '16px'
+      }}>
+        <Text style={{ 
           color: '#ffffff', 
-          margin: 0, 
+          fontSize: '16px', 
+          fontWeight: '500',
+          display: 'block',
           marginBottom: '8px',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
+          lineHeight: '1.4'
         }}>
           {video.originalPrompt}
-        </Title>
+        </Text>
         
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '8px'
+          marginBottom: '12px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Text style={{ color: '#a0a0a0', fontSize: '12px' }}>
-              {new Date(video.createdAt).toLocaleDateString('ja-JP', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </Text>
-            <Text style={{ 
-              color: getRemainingDays() <= 3 ? '#ff4d4f' : '#a0a0a0', 
-              fontSize: '12px' 
-            }}>
-              あと{getRemainingDays()}日保存
-            </Text>
-          </div>
+          <Text style={{ color: '#a0a0a0', fontSize: '14px' }}>
+            {new Date(video.createdAt).toLocaleDateString('ja-JP', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            })}
+          </Text>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Text style={{ 
@@ -1852,24 +1858,8 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
             )}
             </div>
           </div>
-        
-        {/* 移除翻译内容显示 */}
-        {false && video.translatedPrompt && video.translatedPrompt !== video.originalPrompt && (
-          <Text style={{ 
-            color: '#a0a0a0', 
-            fontSize: '11px',
-            fontStyle: 'italic',
-            display: 'block',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap'
-          }}>
-            翻訳: {video.translatedPrompt}
-          </Text>
-        )}
-      </div>
-    </Card>
-
+        </div>
+      </Card>
     </div>
   );
 }
