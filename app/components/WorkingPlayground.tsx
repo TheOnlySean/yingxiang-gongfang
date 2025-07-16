@@ -8,8 +8,7 @@ import {
 import { 
   VideoCameraOutlined, PictureOutlined, UserOutlined, LockOutlined,
   LogoutOutlined, InboxOutlined, EyeOutlined, DeleteOutlined, 
-  PlayCircleOutlined, PauseCircleOutlined, FullscreenOutlined, 
-  SoundOutlined, MutedOutlined, DownloadOutlined,
+  FullscreenOutlined, DownloadOutlined,
   HistoryOutlined, ReloadOutlined, ThunderboltOutlined, CreditCardOutlined
 } from '@ant-design/icons';
 import { IUser, IVideo, IUploadedImage } from '@/types';
