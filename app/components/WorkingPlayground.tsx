@@ -66,17 +66,10 @@ export default function WorkingPlayground() {
   // 视频播放相关状态
   const [videoPlayerVisible, setVideoPlayerVisible] = useState(false);
   const [currentPlayingVideo, setCurrentPlayingVideo] = useState<IVideo | null>(null);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [videoCurrentTime, setVideoCurrentTime] = useState(0);
-  const [videoDuration, setVideoDuration] = useState(0);
-  const [isVideoMuted, setIsVideoMuted] = useState(false);
-  const [videoVolume, setVideoVolume] = useState(0.5);
-  
   // 视频缩略图缓存
   const [videoThumbnails, setVideoThumbnails] = useState<{ [key: string]: string }>({});
   
   // refs
-  const videoPlayerRef = useRef<HTMLVideoElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // 生成视频缩略图
@@ -124,78 +117,16 @@ export default function WorkingPlayground() {
     });
   }, [videoThumbnails]);
 
-  // 视频播放控制
-  const handleVideoPlayPause = useCallback(() => {
-    if (videoPlayerRef.current) {
-      if (isVideoPlaying) {
-        videoPlayerRef.current.pause();
-      } else {
-        videoPlayerRef.current.play();
-      }
-      setIsVideoPlaying(!isVideoPlaying);
-    }
-  }, [isVideoPlaying]);
-
-  const handleVideoTimeUpdate = useCallback(() => {
-    if (videoPlayerRef.current) {
-      setVideoCurrentTime(videoPlayerRef.current.currentTime);
-    }
-  }, []);
-
-  const handleVideoLoadedMetadata = useCallback(() => {
-    if (videoPlayerRef.current) {
-      setVideoDuration(videoPlayerRef.current.duration);
-    }
-  }, []);
-
-  const handleVideoEnded = useCallback(() => {
-    setIsVideoPlaying(false);
-    setVideoCurrentTime(0);
-  }, []);
-
-  const handleVideoSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (videoPlayerRef.current) {
-      const newTime = parseFloat(e.target.value);
-      videoPlayerRef.current.currentTime = newTime;
-      setVideoCurrentTime(newTime);
-    }
-  }, []);
-
-  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (videoPlayerRef.current) {
-      const newVolume = parseFloat(e.target.value);
-      videoPlayerRef.current.volume = newVolume;
-      setVideoVolume(newVolume);
-      setIsVideoMuted(newVolume === 0);
-    }
-  }, []);
-
-  const handleVideoMuteToggle = useCallback(() => {
-    if (videoPlayerRef.current) {
-      const newMuted = !isVideoMuted;
-      videoPlayerRef.current.muted = newMuted;
-      setIsVideoMuted(newMuted);
-    }
-  }, [isVideoMuted]);
-
   // 播放指定视频
   const handlePlayVideo = useCallback((video: IVideo) => {
     setCurrentPlayingVideo(video);
     setVideoPlayerVisible(true);
-    setIsVideoPlaying(false);
-    setVideoCurrentTime(0);
-    setVideoDuration(0);
   }, []);
 
   // 关闭视频播放器
   const handleCloseVideoPlayer = useCallback(() => {
     setVideoPlayerVisible(false);
     setCurrentPlayingVideo(null);
-    setIsVideoPlaying(false);
-    setVideoCurrentTime(0);
-    setVideoDuration(0);
-    setIsVideoMuted(false);
-    setVideoVolume(0.5);
   }, []);
 
   // 检查认证状态
