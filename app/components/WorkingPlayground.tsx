@@ -8,7 +8,7 @@ import {
 import { 
   VideoCameraOutlined, PictureOutlined, UserOutlined, LockOutlined,
   LogoutOutlined, InboxOutlined, EyeOutlined, DeleteOutlined, 
-  FullscreenOutlined, DownloadOutlined, PlayCircleOutlined,
+  FullscreenOutlined, DownloadOutlined,
   HistoryOutlined, ReloadOutlined, ThunderboltOutlined, CreditCardOutlined
 } from '@ant-design/icons';
 import { IUser, IVideo, IUploadedImage } from '@/types';
@@ -1667,7 +1667,6 @@ interface VideoHistoryCardProps {
 function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumbnail, downloadVideo }: VideoHistoryCardProps) {
   const [thumbnailUrl, setThumbnailUrl] = useState<string>(cachedThumbnail || '');
   const [thumbnailLoading, setThumbnailLoading] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // 监听缓存变化
@@ -1724,7 +1723,6 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
 
   // 处理鼠标悬停播放
   const handleMouseEnter = () => {
-    setIsHovered(true);
     if (videoRef.current) {
       const currentTime = videoRef.current.currentTime;
       const wasPaused = videoRef.current.paused;
@@ -1742,7 +1740,6 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
   };
 
   const handleMouseLeave = () => {
-    setIsHovered(false);
     if (videoRef.current) {
       // 恢复原始状态
       const originalTime = parseFloat(videoRef.current.dataset.originalTime || '0');
