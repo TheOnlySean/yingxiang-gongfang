@@ -131,6 +131,13 @@ export default function WorkingPlayground() {
   // 检查认证状态
   const checkAuth = useCallback(async () => {
     try {
+      // 检查是否在客户端环境
+      if (typeof window === 'undefined') {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+      
       const token = localStorage.getItem('token');
       if (!token) {
         setIsAuthenticated(false);
