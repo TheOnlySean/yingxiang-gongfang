@@ -1,41 +1,49 @@
 {
+  "name": "eizokobo-production",
   "version": 2,
-  "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 30,
-      "memory": 1024
-    },
-    "app/api/generate/route.ts": {
-      "maxDuration": 60,
-      "memory": 1024
-    },
-    "app/api/translate/route.ts": {
-      "maxDuration": 30,
-      "memory": 512
-    },
-    "app/api/status/[taskId]/route.ts": {
-      "maxDuration": 10,
-      "memory": 256
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "NEXT_PUBLIC_ENVIRONMENT": "production"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
     }
   },
-  "headers": [
+  "functions": {
+    "app/api/**": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["nrt1"],
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "outputDirectory": ".next",
+  "github": {
+    "enabled": true,
+    "autoAlias": false
+  },
+  "rewrites": [
     {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "X-Requested-With, Content-Type, Authorization"
-        }
-      ]
-    },
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ],
+  "headers": [
     {
       "source": "/(.*)",
       "headers": [
@@ -52,38 +60,10 @@
           "value": "1; mode=block"
         },
         {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/webhooks/stripe",
-      "destination": "/api/payment/webhook"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/login",
-      "destination": "/auth/login",
-      "permanent": true
-    },
-    {
-      "source": "/register",
-      "destination": "/auth/register",
-      "permanent": true
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/cleanup-sessions",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/update-video-status",
-      "schedule": "*/5 * * * *"
     }
   ]
 } 
