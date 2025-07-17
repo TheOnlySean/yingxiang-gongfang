@@ -753,7 +753,6 @@ export default function WorkingPlaygroundMobile() {
             <TemplateSelector
               selectedTemplate={selectedTemplate}
               onTemplateSelect={setSelectedTemplate}
-              onExampleSelect={(example) => setPrompt(example)}
               isMobile={true}
             />
 

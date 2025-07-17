@@ -904,7 +904,6 @@ export default function WorkingPlayground() {
           <TemplateSelector
             selectedTemplate={selectedTemplate}
             onTemplateSelect={setSelectedTemplate}
-            onExampleSelect={(example) => setPrompt(example)}
           />
 
           {/* 提示词输入 */}

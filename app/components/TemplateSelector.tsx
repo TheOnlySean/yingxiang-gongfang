@@ -73,14 +73,12 @@ const CLIENT_TEMPLATES: Record<TemplateId, PromptTemplate> = {
 interface TemplateSelectorProps {
   selectedTemplate: TemplateId | null;
   onTemplateSelect: (templateId: TemplateId | null) => void;
-  onExampleSelect: (example: string) => void;
   isMobile?: boolean; // 新增移动端标识
 }
 
 export default function TemplateSelector({
   selectedTemplate,
   onTemplateSelect,
-  onExampleSelect,
   isMobile = false
 }: TemplateSelectorProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -27,14 +27,14 @@ export async function getTemplateById(id: TemplateId): Promise<PromptTemplate> {
     const template = await dbAdmin.getTemplateByName(id);
     if (template) {
       return {
-        id: template.id as TemplateId,
-        name: template.name,
-        nameJa: template.name_ja,
+        id: template.template_name as TemplateId,
+        name: template.display_name_en,
+        nameJa: template.display_name_ja,
         description: template.description,
-        thumbnail: template.thumbnail,
+        thumbnail: template.thumbnail_url,
         translationHint: template.hint || '',
         videoPrompt: template.add_on || '',
-        example: template.example || ''
+        example: ''
       };
     }
     throw new Error(`Template with ID ${id} not found`);
@@ -211,7 +211,6 @@ Instructions:
 CRITICAL: Video Generation Guidelines:
 - NEVER include instructions for text, subtitles, captions, or any written words to appear in the video
 - AVOID phrases like "with subtitles", "showing text", "displaying words", "with captions", "text overlay"
-- DO NOT mention romaji, hiragana, katakana, or any written characters appearing on screen
 - Focus ONLY on visual elements, actions, scenes, environments, and spoken dialogue
 - The video should be purely visual without any distracting text or overlays
 - If no specific ethnicity is mentioned in the prompt, ALWAYS assume the person in the video is Japanese
