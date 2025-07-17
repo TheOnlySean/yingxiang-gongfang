@@ -507,9 +507,133 @@ export const userOperations = {
     } finally {
       await client.end();
     }
+  },
+
+  // Template相关方法
+  async getTemplateByName(templateName: string): Promise<ITemplate | null> {
+    const client = await createDbConnection();
+    try {
+      const result = await client.query('SELECT * FROM templates WHERE template_name = $1 AND is_active = true', [templateName]);
+      return result.rows.length > 0 ? result.rows[0] : null;
+    } finally {
+      await client.end();
+    }
+  },
+
+  async getAllTemplates(activeOnly: boolean = true): Promise<ITemplate[]> {
+    const client = await createDbConnection();
+    try {
+      const query = activeOnly 
+        ? 'SELECT * FROM templates WHERE is_active = true ORDER BY sort_order, id'
+        : 'SELECT * FROM templates ORDER BY sort_order, id';
+      
+      const result = await client.query(query);
+      return result.rows;
+    } finally {
+      await client.end();
+    }
+  },
+
+  async createTemplate(data: ICreateTemplateData): Promise<ITemplate> {
+    const client = await createDbConnection();
+    try {
+      const result = await client.query(`
+        INSERT INTO templates (
+          template_name, hint, add_on, display_name_en, display_name_ja,
+          description, thumbnail_url, is_active, sort_order
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING *
+      `, [
+        data.template_name,
+        data.hint,
+        data.add_on,
+        data.display_name_en,
+        data.display_name_ja,
+        data.description,
+        data.thumbnail_url,
+        data.is_active ?? true,
+        data.sort_order ?? 0
+      ]);
+      return result.rows[0];
+    } finally {
+      await client.end();
+    }
+  },
+
+  async updateTemplate(id: number, data: Partial<ICreateTemplateData>): Promise<ITemplate | null> {
+    const client = await createDbConnection();
+    try {
+      const fields = [];
+      const values = [];
+      let paramIndex = 1;
+
+      for (const [key, value] of Object.entries(data)) {
+        if (value !== undefined) {
+          fields.push(`${key} = $${paramIndex}`);
+          values.push(value);
+          paramIndex++;
+        }
+      }
+
+      if (fields.length === 0) {
+        throw new Error('No fields to update');
+      }
+
+      values.push(id);
+
+      const query = `
+        UPDATE templates 
+        SET ${fields.join(', ')}
+        WHERE id = $${paramIndex}
+        RETURNING *
+      `;
+
+      const result = await client.query(query, values);
+      return result.rows.length > 0 ? result.rows[0] : null;
+    } finally {
+      await client.end();
+    }
+  },
+
+  async deleteTemplate(id: number): Promise<boolean> {
+    const client = await createDbConnection();
+    try {
+      const result = await client.query('DELETE FROM templates WHERE id = $1', [id]);
+      return (result.rowCount ?? 0) > 0;
+    } finally {
+      await client.end();
+    }
   }
 };
 
 // 导出数据库操作（保持兼容性）
 export { userOperations as dbAdmin };
 export { userOperations as db };
+
+// Template相关接口
+export interface ITemplate {
+  id: number;
+  template_name: string;
+  hint: string;
+  add_on: string;
+  display_name_en: string;
+  display_name_ja: string;
+  description: string;
+  thumbnail_url: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
+export interface ICreateTemplateData {
+  template_name: string;
+  hint: string;
+  add_on: string;
+  display_name_en: string;
+  display_name_ja: string;
+  description: string;
+  thumbnail_url: string;
+  is_active?: boolean;
+  sort_order?: number;
+}
+
+

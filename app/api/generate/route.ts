@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     // 解析请求体
     const body = await request.json();
-    const { prompt, originalPrompt, seed, images, imageUrls } = body;
+    const { prompt, originalPrompt, seed, images, imageUrls, templateId } = body;
 
     // 验证请求体 - 支持两种字段名
     const promptText = prompt || originalPrompt;
@@ -41,7 +41,8 @@ export async function POST(request: NextRequest) {
     const form: IVideoGenerationForm = {
       originalPrompt: promptText,
       imageUrls: images || imageUrls || [],
-      ...(seed ? { seed } : {})
+      ...(seed ? { seed } : {}),
+      ...(templateId ? { templateId } : {})
     };
 
     // 移除测试模式 - 直接使用真实KIE.AI API

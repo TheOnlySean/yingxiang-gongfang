@@ -11,6 +11,7 @@
     "env:prod": "node scripts/switch-environment.js production",
     "env:sync": "node scripts/sync-env-from-vercel.js",
     "env:pull": "node scripts/quick-env-sync.js",
+    "init:templates": "node scripts/init-templates.js",
     "deploy:dev": "npm run env:dev && npm run build",
     "deploy:prod": "npm run env:prod && npm run build",
     "favicon:create": "node scripts/create-favicon.js",

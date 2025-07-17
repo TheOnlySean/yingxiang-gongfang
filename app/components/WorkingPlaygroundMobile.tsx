@@ -33,6 +33,11 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Dragger } = Upload;
 
+// 全局API调用追踪器，防止重复调用
+let isVideosApiCallInProgressMobile = false;
+let lastVideosApiCallTimeMobile = 0;
+const VIDEOS_API_THROTTLE_MOBILE = 1000; // 1秒内只允许一次API调用
+
 // 定义上传图片的类型
 interface IUploadedImage {
   id: string;
@@ -77,10 +82,29 @@ export default function WorkingPlaygroundMobile() {
   const loadVideoHistory = useCallback(async () => {
     if (!user) return;
     
+    // 全局API调用防重复检查
+    const now = Date.now();
+    if (isVideosApiCallInProgressMobile) {
+      console.log('Videos API call already in progress (mobile), skipping...');
+      return;
+    }
+    if (now - lastVideosApiCallTimeMobile < VIDEOS_API_THROTTLE_MOBILE) {
+      console.log('Videos API call throttled (mobile), skipping...');
+      return;
+    }
+    
+    // 防止重复加载
+    if (isLoadingHistory) return;
+    
     // 检查是否在客户端环境
     if (typeof window === 'undefined') {
       return;
     }
+
+    console.log(`Videos API called with: { limit: ${VIDEOS_PER_PAGE}, offset: 0 }`);
+
+    isVideosApiCallInProgressMobile = true;
+    lastVideosApiCallTimeMobile = now;
 
     setIsLoadingHistory(true);
     try {
@@ -107,8 +131,9 @@ export default function WorkingPlaygroundMobile() {
       message.error('動画履歴の読み込みエラー');
     } finally {
       setIsLoadingHistory(false);
+      isVideosApiCallInProgressMobile = false;
     }
-  }, [user]);
+  }, [user, isLoadingHistory]);
 
   // 图片上传处理
   const handleImageUpload = async (file: File): Promise<void> => {
@@ -248,6 +273,24 @@ export default function WorkingPlaygroundMobile() {
         const errorData = await response.json();
         const errorMessage = typeof errorData.error === 'string' ? errorData.error : errorData.error?.message || '動画生成に失敗しました';
         message.error(errorMessage);
+        
+        // 显示积分退还信息（生成请求立即失败时）
+        setTimeout(() => {
+          message.info('使用したポイント（300ポイント）は自動的に返還されました。');
+        }, 1500);
+        
+        // 刷新用户信息以显示退还的积分
+        const token = localStorage.getItem('token');
+        if (token) {
+          const userResponse = await fetch('/api/auth/verify', { 
+            headers: { 'Authorization': `Bearer ${token}` } 
+          });
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            setUser(userData);
+          }
+        }
+        
         setIsGenerating(false);
       }
     } catch (error) {
@@ -428,6 +471,19 @@ export default function WorkingPlaygroundMobile() {
             clearInterval(progressInterval);
             const errorMessage = typeof videoData.error === 'string' ? videoData.error : videoData.error?.message || '動画生成に失敗しました';
             message.error(errorMessage);
+            
+            // 显示积分退还信息
+            setTimeout(() => {
+              message.info('使用したポイント（300ポイント）は自動的に返還されました。');
+            }, 1500);
+            
+            // 刷新用户信息以显示退还的积分
+            const userResponse = await fetch('/api/auth/verify', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (userResponse.ok) {
+              const userData = await userResponse.json();
+              setUser(userData);
+            }
+            
             return;
           }
         }
@@ -464,7 +520,7 @@ export default function WorkingPlaygroundMobile() {
         const data = batchResult.data;
         if (data.updatedCount > 0) {
           if (data.completedVideos > 0) message.success(`${data.completedVideos}本の動画生成が完了しました！`);
-          if (data.failedVideos > 0) message.warning(`${data.failedVideos}本の動画生成に失敗しました。`);
+          if (data.failedVideos > 0) message.warning(`${data.failedVideos}本の動画生成に失敗しました（400/500/501エラー含む）。使用したポイントは自動的に返還されました。`);
           if (data.completedVideos === 0 && data.failedVideos === 0) message.info(`${data.updatedCount}本の動画状況を確認しました。`);
         } else {
           if (isManualRefresh) message.info('確認中の動画はありません');
@@ -698,6 +754,7 @@ export default function WorkingPlaygroundMobile() {
               selectedTemplate={selectedTemplate}
               onTemplateSelect={setSelectedTemplate}
               onExampleSelect={(example) => setPrompt(example)}
+              isMobile={true}
             />
 
             {/* 提示词输入 */}
@@ -780,11 +837,11 @@ export default function WorkingPlaygroundMobile() {
               
               {/* 音频功能提示 */}
               <div style={{ 
-                marginTop: '8px', 
-                textAlign: 'center',
+                marginTop: '12px', 
+                textAlign: 'left',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'flex-start',
                 gap: '4px',
                 padding: '0 8px'
               }}>
@@ -795,9 +852,10 @@ export default function WorkingPlaygroundMobile() {
                   🔊
                 </span>
                 <Text style={{ 
-                  color: 'rgba(255, 255, 255, 0.6)', 
-                  fontSize: '11px',
-                  lineHeight: '1.4'
+                  color: 'rgba(255, 255, 255, 0.5)', 
+                  fontSize: '9px',
+                  lineHeight: '1.3',
+                  fontWeight: '300'
                 }}>
                   音声は実験的な機能のため、一部の動画ではご利用いただけない場合がございます。
                 </Text>

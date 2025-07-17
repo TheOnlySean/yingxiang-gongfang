@@ -208,6 +208,9 @@ export async function generateVideo(
   userId: string,
   form: IVideoGenerationForm
 ): Promise<IApiResponse<IVideo>> {
+  let creditsDeducted = false;
+  let deductedCredits = 0;
+  
   try {
     // 验证表单
     const validation = validateVideoGenerationForm(form);
@@ -260,9 +263,15 @@ export async function generateVideo(
 
     // 应用场景模板增强
     let finalPrompt = translationResult.data.translatedPrompt;
+    console.log('📝 Original translated prompt:', translationResult.data.translatedPrompt);
+    console.log('🎬 Selected template:', form.templateId);
+    
     if (form.templateId) {
       const { combinePromptWithScene } = await import('./translation');
-      finalPrompt = combinePromptWithScene(translationResult.data.translatedPrompt, form.templateId as any);
+      finalPrompt = await combinePromptWithScene(translationResult.data.translatedPrompt, form.templateId as any);
+      console.log('✨ Final prompt after template enhancement:', finalPrompt);
+    } else {
+      console.log('ℹ️ No template selected, using original translated prompt');
     }
 
     // 构建KIE.AI请求
@@ -318,6 +327,15 @@ export async function generateVideo(
       kieAiRequest.seed = form.seed.trim();
     }
 
+    // 先扣除用户点数
+    const currentUser = await dbAdmin.findById(userId);
+    await dbAdmin.update(userId, {
+      credits: creditCheck.currentCredits - requiredCredits,
+      videosGenerated: (currentUser?.videosGenerated || 0) + 1
+    });
+    creditsDeducted = true;
+    deductedCredits = requiredCredits;
+
     // 调用KIE.AI API
     console.log('🚀 Calling KIE.AI API with request:', JSON.stringify(kieAiRequest, null, 2));
     const kieAiResponse = await kieAiClient.generateVideo(kieAiRequest);
@@ -338,13 +356,6 @@ export async function generateVideo(
 
     const dbVideo = await dbAdmin.createVideo(videoData);
     
-    // 扣除用户点数
-    const currentUser = await dbAdmin.findById(userId);
-    await dbAdmin.update(userId, {
-      credits: creditCheck.currentCredits - requiredCredits,
-      videosGenerated: (currentUser?.videosGenerated || 0) + 1
-    });
-
     // 使用转换函数构建返回的视频对象
     const video: IVideo = dbVideoToVideo(dbVideo);
 
@@ -356,11 +367,52 @@ export async function generateVideo(
   } catch (error) {
     console.error('Video generation error:', error);
     
+    // 如果已经扣除了积分，需要退还
+    if (creditsDeducted) {
+      try {
+        console.log(`Refunding ${deductedCredits} credits to user ${userId} due to generation failure`);
+        const currentUser = await dbAdmin.findById(userId);
+        if (currentUser) {
+          await dbAdmin.update(userId, {
+            credits: currentUser.credits + deductedCredits,
+            videosGenerated: Math.max(0, currentUser.videosGenerated - 1)
+          });
+          console.log(`Successfully refunded ${deductedCredits} credits to user ${userId}`);
+        }
+      } catch (refundError) {
+        console.error('Failed to refund credits:', refundError);
+      }
+    }
+
+    // 解析KIE.AI错误并提供用户友好的错误信息
+    let userFriendlyMessage = 'サーバーエラーが発生しました。しばらく待ってからお試しください。';
+    
+    if (error instanceof Error) {
+      const errorMessage = error.message;
+      
+      // 根据KIE.AI API文档的错误信息进行分类
+      if (errorMessage.includes('400') || errorMessage.includes('Your prompt was flagged')) {
+        userFriendlyMessage = 'プロンプトがコンテンツポリシーに違反しています。';
+      } else if (errorMessage.includes('Only English prompts are supported')) {
+        userFriendlyMessage = '現在英語プロンプトのみサポートされています。';
+      } else if (errorMessage.includes('Failed to fetch the image')) {
+        userFriendlyMessage = '画像の取得に失敗しました。';
+      } else if (errorMessage.includes('public error unsafe image upload')) {
+        userFriendlyMessage = '画像の内容が安全基準に適合しません。';
+      } else if (errorMessage.includes('500') || errorMessage.includes('Internal Error')) {
+        userFriendlyMessage = 'サーバー内部エラーが発生しました。しばらく待ってからお試しください。';
+      } else if (errorMessage.includes('501') || errorMessage.includes('Failed - Video generation task failed')) {
+        userFriendlyMessage = '動画生成タスクが失敗しました。しばらく待ってからお試しください。';
+      } else if (errorMessage.includes('Timeout')) {
+        userFriendlyMessage = '処理がタイムアウトしました。しばらく待ってからお試しください。';
+      }
+    }
+    
     return {
       success: false,
       error: {
         code: API_ERROR_CODES.GENERATION_FAILED,
-        message: error instanceof Error ? error.message : 'Video generation failed'
+        message: userFriendlyMessage
       }
     };
   }
@@ -400,7 +452,9 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
       newStatus = 'processing';
       console.log('Video generation still in progress');
     } else {
+      // 处理各种失败情况，包括400、500、501错误
       console.log('Video generation failed');
+      console.log('KIE.AI status response:', JSON.stringify(kieAiStatus, null, 2));
     }
     
     // 更新状态
@@ -423,20 +477,54 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
     }
     
     // 处理错误信息
-    if (newStatus === 'failed' && kieAiStatus.data && kieAiStatus.data.errorMessage && !dbVideo.error_message) {
-      let userFriendlyMessage = kieAiStatus.data.errorMessage;
+    if (newStatus === 'failed' && !dbVideo.error_message) {
+      let userFriendlyMessage = 'コンテンツが安全基準に適合しません。別の内容をお試しください。';
       
-      // 将技术错误信息转换为用户友好的提示
-      if (kieAiStatus.data.errorMessage.includes('unsafe image upload')) {
-        userFriendlyMessage = '画像の内容が安全基準に適合しません。風景、動物、物品などの画像をお試しください。';
-      } else if (kieAiStatus.data.errorMessage.includes('image')) {
-        userFriendlyMessage = '画像の処理中にエラーが発生しました。別の画像をお試しください。';
+      // 从KIE.AI响应中提取错误信息
+      if (kieAiStatus.data && kieAiStatus.data.errorMessage) {
+        const errorMessage = kieAiStatus.data.errorMessage;
+        
+        // 将技术错误信息转换为用户友好的提示
+        if (errorMessage.includes('unsafe image upload') || errorMessage.includes('public error unsafe image upload')) {
+          userFriendlyMessage = '画像の内容が安全基準に適合しません。';
+        } else if (errorMessage.includes('Failed to fetch the image')) {
+          userFriendlyMessage = '画像の取得に失敗しました。';
+        } else if (errorMessage.includes('Only English prompts are supported')) {
+          userFriendlyMessage = '現在英語プロンプトのみサポートされています。';
+        } else if (errorMessage.includes('violating content policies')) {
+          userFriendlyMessage = 'コンテンツポリシーに違反しています。';
+        } else if (errorMessage.includes('image')) {
+          userFriendlyMessage = '画像の処理中にエラーが発生しました。';
+        } else if (errorMessage.includes('content') || errorMessage.includes('policy') || errorMessage.includes('unsafe')) {
+          userFriendlyMessage = 'コンテンツが安全基準に適合しません。';
+        } else if (errorMessage.includes('400')) {
+          userFriendlyMessage = 'リクエストの内容に問題があります。';
+        } else if (errorMessage.includes('500') || errorMessage.includes('Internal Error')) {
+          userFriendlyMessage = 'サーバー内部エラーが発生しました。しばらく待ってからお試しください。';
+        } else if (errorMessage.includes('501') || errorMessage.includes('Failed - Video generation task failed')) {
+          userFriendlyMessage = '動画生成タスクが失敗しました。しばらく待ってからお試しください。';
+        } else if (errorMessage.includes('Timeout')) {
+          userFriendlyMessage = '処理がタイムアウトしました。しばらく待ってからお試しください。';
+        }
+      } else if (kieAiStatus.code && kieAiStatus.code !== 200) {
+        // 处理HTTP错误状态码
+        if (kieAiStatus.code === 400) {
+          userFriendlyMessage = 'リクエストの内容に問題があります。プロンプトや画像を確認してください。';
+        } else if (kieAiStatus.code === 429) {
+          userFriendlyMessage = 'リクエストが多すぎます。しばらく待ってからお試しください。';
+        } else if (kieAiStatus.code === 500) {
+          userFriendlyMessage = 'サーバー内部エラーが発生しました。しばらく待ってからお試しください。';
+        } else if (kieAiStatus.code === 501) {
+          userFriendlyMessage = '動画生成タスクが失敗しました。しばらく待ってからお試しください。';
+        } else {
+          userFriendlyMessage = 'サーバーエラーが発生しました。しばらく待ってからお試しください。';
+        }
       }
       
       updates.error_message = userFriendlyMessage;
     }
     
-    // 处理退款逻辑（当生成失败时）
+    // 处理退款逻辑（当生成失败时）- 确保所有失败情况都能退款
     let refundApplied = false;
     if (newStatus === 'failed' && (dbVideo.status === 'pending' || dbVideo.status === 'processing')) {
       try {
@@ -452,6 +540,10 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
           
           refundApplied = true;
           console.log(`Refunded ${refundCredits} credits to user ${dbVideo.userId} for failed generation. Task: ${dbVideo.taskId}`);
+          
+          // 记录退款原因
+          const errorSource = kieAiStatus.data?.errorMessage || `HTTP ${kieAiStatus.code}` || 'Unknown error';
+          console.log(`Refund reason: ${errorSource}`);
         }
       } catch (refundError) {
         console.error('Failed to process refund:', refundError);

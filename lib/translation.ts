@@ -18,87 +18,51 @@ export interface PromptTemplate {
   example: string;
 }
 
-// 模板定义
-export const PROMPT_TEMPLATES: Record<TemplateId, PromptTemplate> = {
-  selling: {
-    id: 'selling',
-    name: 'SELLING',
-    nameJa: '販売',
-    description: '商品やサービスを販売・宣伝する動画',
-    thumbnail: '/templates/selling.gif',
-    translationHint: 'The content is about selling or promoting products.',
-    videoPrompt: 'This is a video of someone selling or promoting a product. The person should display confident body language, engaging expressions, persuasive gestures, and professional presentation style. Focus on clear product demonstration and compelling sales energy.',
-    example: '商品を紹介している女性、笑顔で魅力的に'
-  },
-  selfie: {
-    id: 'selfie',
-    name: 'SELFIE',
-    nameJa: 'セルフィー',
-    description: '自撮りスタイルの個人的な動画',
-    thumbnail: '/templates/selfie.gif',
-    translationHint: 'The content is about selfie-style personal recording.',
-    videoPrompt: 'This is a selfie-style video where someone is recording themselves. Use personal, intimate framing with the camera close to the subject. Focus on natural, authentic expressions, casual atmosphere, and direct eye contact with the camera as if speaking to a friend.',
-    example: '自撮りをしている若い女性、自然な笑顔で'
-  },
-  interview: {
-    id: 'interview',
-    name: 'INTERVIEW',
-    nameJa: 'インタビュー',
-    description: 'インタビューや会話形式の動画',
-    thumbnail: '/templates/interview.gif',
-    translationHint: 'The content is about interview or conversation.',
-    videoPrompt: 'This is an interview video where someone is being interviewed or having a conversation. The subject should display professional demeanor, natural speaking gestures, appropriate eye contact, and conversational body language. Focus on clear dialogue delivery and attentive listening poses.',
-    example: 'インタビューを受けている男性、真剣に話している'
-  },
-  steadicam: {
-    id: 'steadicam',
-    name: 'STEADICAM',
-    nameJa: 'ステディカム',
-    description: '滑らかなカメラワークの映画的な動画',
-    thumbnail: '/templates/steadicam.gif',
-    translationHint: 'The content involves smooth camera movements.',
-    videoPrompt: 'This is a video shot with smooth, cinematic camera movements. The camera should move fluidly around or with the subject, creating dynamic framing and professional cinematography. Focus on seamless camera tracking, smooth transitions, and cinematic composition.',
-    example: 'カメラが滑らかに移動しながら人物を追っている'
-  },
-  singing: {
-    id: 'singing',
-    name: 'SINGING',
-    nameJa: '歌唱',
-    description: '歌唱やミュージカルパフォーマンスの動画',
-    thumbnail: '/templates/singing.gif',
-    translationHint: 'The content is about singing or musical performance.',
-    videoPrompt: 'This is a video of someone singing or performing music. The performer should display expressive facial movements, emotional engagement, rhythm-based gestures, and musical energy. Focus on lip-sync accuracy, passionate expressions, and performance charisma.',
-    example: '歌を歌っている女性、感情豊かな表情で'
-  },
-  general: {
-    id: 'general',
-    name: 'GENERAL',
-    nameJa: '一般',
-    description: '一般的なシーン、特別な指定なし',
-    thumbnail: '/templates/general.gif',
-    translationHint: '',
-    videoPrompt: '',
-    example: '自然な表情の人物、日常的なシーンで'
-  }
-};
+// 移除硬编码的模板定义，改为从数据库读取
+// export const PROMPT_TEMPLATES: Record<TemplateId, PromptTemplate> = { ... }
 
 // 根据ID获取模板
-export function getTemplateById(id: TemplateId): PromptTemplate {
-  return PROMPT_TEMPLATES[id];
+export async function getTemplateById(id: TemplateId): Promise<PromptTemplate> {
+  try {
+    const template = await dbAdmin.getTemplateByName(id);
+    if (template) {
+      return {
+        id: template.id as TemplateId,
+        name: template.name,
+        nameJa: template.name_ja,
+        description: template.description,
+        thumbnail: template.thumbnail,
+        translationHint: template.hint || '',
+        videoPrompt: template.add_on || '',
+        example: template.example || ''
+      };
+    }
+    throw new Error(`Template with ID ${id} not found`);
+  } catch (error) {
+    console.error('Error getting template by ID:', error);
+    throw error;
+  }
 }
 
-// 组合最终prompt的函数
-export function combinePromptWithScene(translatedPrompt: string, templateId?: TemplateId): string {
+// 组合最终prompt的函数 - 从数据库读取模板
+export async function combinePromptWithScene(translatedPrompt: string, templateId?: string): Promise<string> {
   if (!templateId || templateId === 'general') {
     return translatedPrompt;
   }
   
-  const template = PROMPT_TEMPLATES[templateId];
-  if (!template.videoPrompt) {
+  try {
+    const template = await dbAdmin.getTemplateByName(templateId);
+    if (!template || !template.add_on) {
+      console.log('ℹ️ No template add-on found for:', templateId);
+      return translatedPrompt;
+    }
+    
+    console.log('✨ Adding template add-on for:', templateId);
+    return `${template.add_on}\n\n${translatedPrompt}`;
+  } catch (error) {
+    console.error('Error fetching template for prompt combination:', error);
     return translatedPrompt;
   }
-  
-  return `${template.videoPrompt}\n\n${translatedPrompt}`;
 }
 
 // OpenAI配置
@@ -228,7 +192,7 @@ async function saveTranslationCache(translation: ITranslation): Promise<void> {
 }
 
 // 使用OpenAI翻译文本
-async function translateWithOpenAI(text: string, templateId?: TemplateId): Promise<string> {
+async function translateWithOpenAI(text: string, templateId?: string): Promise<string> {
   try {
     let systemPrompt = `
 You are a professional Japanese to English translator specializing in Veo3 video generation prompts.
@@ -249,14 +213,26 @@ CRITICAL: Video Generation Guidelines:
 - AVOID phrases like "with subtitles", "showing text", "displaying words", "with captions", "text overlay"
 - DO NOT mention romaji, hiragana, katakana, or any written characters appearing on screen
 - Focus ONLY on visual elements, actions, scenes, environments, and spoken dialogue
-- The video should be purely visual without any distracting text or overlays.`;
+- The video should be purely visual without any distracting text or overlays
+- If no specific ethnicity is mentioned in the prompt, ALWAYS assume the person in the video is Japanese
+- If no specific language is mentioned for speaking, ALWAYS add "Speak in Japanese" to ensure Japanese speech`;
 
-    // 添加模板提示用于翻译优化
-    if (templateId && templateId !== 'general' && PROMPT_TEMPLATES[templateId]) {
-      const template = PROMPT_TEMPLATES[templateId];
-      if (template.translationHint) {
-        systemPrompt += `\n\nScene Context: ${template.translationHint}`;
+    // 从数据库获取模板提示用于翻译优化
+    if (templateId && templateId !== 'general') {
+      try {
+        const template = await dbAdmin.getTemplateByName(templateId);
+        if (template && template.hint) {
+          systemPrompt += `\n\nScene Context: ${template.hint}`;
+          console.log('🎯 Translation template hint added:', template.hint);
+        } else {
+          console.log('ℹ️ No template hint found for:', templateId);
+        }
+      } catch (error) {
+        console.error('Error fetching template for translation:', error);
+        console.log('ℹ️ No template hint added to translation');
       }
+    } else {
+      console.log('ℹ️ No template hint added to translation');
     }
 
     systemPrompt += `
@@ -274,17 +250,17 @@ Please translate the following Japanese text:
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text }
       ],
-      temperature: 0.3,
-      max_tokens: 2000
+      max_tokens: 1000,
+      temperature: 0.3
     });
 
-    const translatedText = response.choices[0]?.message?.content || '';
+    const translatedText = response.choices[0]?.message?.content;
     
     if (!translatedText) {
       throw new Error('No translation received from OpenAI');
     }
 
-    return translatedText;
+    return translatedText.trim();
   } catch (error) {
     console.error('OpenAI translation error:', error);
     throw error;
@@ -327,7 +303,7 @@ export async function translatePrompt(
     useCache?: boolean;
     includeDialogue?: boolean;
     addRomaji?: boolean;
-    templateId?: TemplateId;
+    templateId?: string;
   } = {}
 ): Promise<IApiResponse<ITranslation>> {
   const startTime = Date.now();

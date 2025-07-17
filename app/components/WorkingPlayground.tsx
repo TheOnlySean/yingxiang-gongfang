@@ -23,6 +23,11 @@ const { Dragger } = Upload;
 const VIDEOS_PER_PAGE = 3; // 每页显示3个视频
 const SCROLL_THRESHOLD = 100; // 滚动到底部100px时加载更多
 
+// 全局API调用追踪器，防止重复调用
+let isVideosApiCallInProgress = false;
+let lastVideosApiCallTime = 0;
+const VIDEOS_API_THROTTLE = 1000; // 1秒内只允许一次API调用
+
 export default function WorkingPlayground() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -45,6 +50,9 @@ export default function WorkingPlayground() {
   
   // 轮询控制状态 - 只保留实际使用的
   const [, setCurrentTaskId] = useState<string | null>(null);
+  
+  // API调用防重复控制
+  const [isVideoHistoryLoading, setIsVideoHistoryLoading] = useState(false);
 
   // 视频历史相关状态（分页）
   const [videoHistory, setVideoHistory] = useState<IVideo[]>([]);
@@ -215,8 +223,29 @@ export default function WorkingPlayground() {
   const loadVideoHistory = useCallback(async (page: number = 1, reset: boolean = false) => {
     if (!user) return;
 
+    // 全局API调用防重复检查
+    const now = Date.now();
+    if (isVideosApiCallInProgress) {
+      console.log('Videos API call already in progress, skipping...');
+      return;
+    }
+    if (now - lastVideosApiCallTime < VIDEOS_API_THROTTLE) {
+      console.log('Videos API call throttled, skipping...');
+      return;
+    }
+
+    // 防止重复加载
+    if (page === 1 && (isLoadingHistory || isVideoHistoryLoading)) return;
+    if (page > 1 && isLoadingMore) return;
+
+    console.log(`Videos API called with: { limit: ${VIDEOS_PER_PAGE}, offset: ${(page - 1) * VIDEOS_PER_PAGE} }`);
+
+    isVideosApiCallInProgress = true;
+    lastVideosApiCallTime = now;
+
     if (page === 1) {
-    setIsLoadingHistory(true);
+      setIsLoadingHistory(true);
+      setIsVideoHistoryLoading(true);
     } else {
       setIsLoadingMore(true);
     }
@@ -256,8 +285,12 @@ export default function WorkingPlayground() {
     } finally {
       setIsLoadingHistory(false);
       setIsLoadingMore(false);
+      if (page === 1) {
+        setIsVideoHistoryLoading(false);
+      }
+      isVideosApiCallInProgress = false;
     }
-  }, [user]);
+  }, [user, isLoadingHistory, isLoadingMore, isVideoHistoryLoading]);
 
   // 滚动监听，加载更多视频
   const handleScroll = useCallback(() => {
@@ -301,7 +334,7 @@ export default function WorkingPlayground() {
             message.success(`${data.completedVideos}本の動画生成が完了しました！`);
           }
           if (data.failedVideos > 0) {
-            message.warning(`${data.failedVideos}本の動画生成に失敗しました。`);
+            message.warning(`${data.failedVideos}本の動画生成に失敗しました（400/500/501エラー含む）。使用したポイントは自動的に返還されました。`);
           }
           if (data.completedVideos === 0 && data.failedVideos === 0) {
             message.info(`${data.updatedCount}本の動画状況を確認しました。`);
@@ -549,6 +582,24 @@ export default function WorkingPlayground() {
           ? errorData.error 
           : errorData.error?.message || '動画生成に失敗しました';
         message.error(errorMessage);
+        
+        // 显示积分退还信息（生成请求立即失败时）
+        setTimeout(() => {
+          message.info('使用したポイント（300ポイント）は自動的に返還されました。');
+        }, 1500);
+        
+        // 刷新用户信息以显示退还的积分
+        const token = localStorage.getItem('token');
+        if (token) {
+          const userResponse = await fetch('/api/auth/verify', { 
+            headers: { 'Authorization': `Bearer ${token}` } 
+          });
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            setUser(userData);
+          }
+        }
+        
         setIsGenerating(false);
       }
     } catch (error) {
@@ -623,6 +674,23 @@ export default function WorkingPlayground() {
               ? videoData.error 
               : videoData.error?.message || '動画生成に失敗しました';
             message.error(errorMessage);
+            
+            // 显示积分退还信息
+            setTimeout(() => {
+              message.info('使用したポイント（300ポイント）は自動的に返還されました。');
+            }, 1500);
+            
+            // 刷新用户信息以显示退还的积分
+            const userResponse = await fetch('/api/auth/verify', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (userResponse.ok) {
+              const userData = await userResponse.json();
+              setUser(userData);
+            }
+            
             return;
           }
           
@@ -652,10 +720,11 @@ export default function WorkingPlayground() {
 
   // 当用户认证后加载视频历史
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && !isVideoHistoryLoading) {
+      console.log('Loading video history due to auth change');
       loadVideoHistory(1, true);
     }
-  }, [isAuthenticated, user, loadVideoHistory]);
+  }, [isAuthenticated, user]);
 
   // 添加滚动监听
   useEffect(() => {
@@ -669,10 +738,15 @@ export default function WorkingPlayground() {
 
   // 添加窗口焦点监听，用于当用户从其他页面（如支付页面）返回时刷新用户信息
   useEffect(() => {
+    let lastFocusTime = 0;
+    const FOCUS_THROTTLE = 5000; // 5秒内只允许一次焦点刷新
+    
     const handleWindowFocus = () => {
-      // 只有在用户已认证时才刷新
-      if (isAuthenticated && user) {
+      const now = Date.now();
+      // 只有在用户已认证且距离上次焦点刷新超过5秒时才刷新
+      if (isAuthenticated && user && (now - lastFocusTime > FOCUS_THROTTLE)) {
         console.log('Window focused, refreshing user data...');
+        lastFocusTime = now;
         checkAuth();
       }
     };
@@ -912,11 +986,11 @@ export default function WorkingPlayground() {
               
               {/* 音频功能提示 */}
               <div style={{ 
-                marginTop: '8px', 
-                textAlign: 'center',
+                marginTop: '12px', 
+                textAlign: 'left',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'flex-start',
                 gap: '4px'
               }}>
                 <span style={{ 
@@ -926,9 +1000,10 @@ export default function WorkingPlayground() {
                   🔊
                 </span>
                 <Text style={{ 
-                  color: 'rgba(255, 255, 255, 0.6)', 
-                  fontSize: '11px',
-                  lineHeight: '1.4'
+                  color: 'rgba(255, 255, 255, 0.5)', 
+                  fontSize: '9px',
+                  lineHeight: '1.3',
+                  fontWeight: '300'
                 }}>
                   音声は実験的な機能のため、一部の動画ではご利用いただけない場合がございます。
                 </Text>
