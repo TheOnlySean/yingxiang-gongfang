@@ -16,10 +16,18 @@ export default function MobileCreditsSuccess() {
   const [purchaseInfo, setPurchaseInfo] = useState<any>(null);
   const [showInfo, setShowInfo] = useState(false);
   const [isUpdating, setIsUpdating] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // 处理挂载状态
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 获取用户数据 - 只在挂载后执行
+  useEffect(() => {
+    if (!mounted) return;
     let retryCount = 0;
     const maxRetries = 10; // 最多重试10次
     let initialCredits: number | null = null;
@@ -111,7 +119,7 @@ export default function MobileCreditsSuccess() {
 
     fetchUserBalance();
     fetchPurchaseInfo();
-  }, [router, searchParams]);
+  }, [mounted, router, searchParams]);
 
   const handleStartVideoGeneration = () => {
     // 添加参数让主页知道需要刷新积分
@@ -122,6 +130,21 @@ export default function MobileCreditsSuccess() {
     // 跳转到积分购买页面查看更多套餐
     router.push('/credits/purchase');
   };
+
+  // 如果还没有挂载，显示加载状态
+  if (!mounted) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <MobileLayout

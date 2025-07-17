@@ -27,27 +27,10 @@ export default function CreditsSuccessPage() {
     setShouldUseMobile(isMobile || isTablet);
   }, [isMobile, isTablet]);
 
-  // 如果还没有挂载，显示加载状态
-  if (!mounted) {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  // 挂载后根据设备类型选择组件
-  if (shouldUseMobile) {
-    return <MobileCreditsSuccess />;
-  }
-
+  // 获取用户数据 - 只在挂载后执行
   useEffect(() => {
+    if (!mounted) return;
+
     let retryCount = 0;
     const maxRetries = 10; // 最多重试10次
     let initialCredits: number | null = null;
@@ -139,7 +122,27 @@ export default function CreditsSuccessPage() {
 
     fetchUserBalance();
     fetchPurchaseInfo();
-  }, [router, searchParams]);
+  }, [mounted, router, searchParams]);
+
+  // 如果还没有挂载，显示加载状态
+  if (!mounted) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  // 挂载后根据设备类型选择组件
+  if (shouldUseMobile) {
+    return <MobileCreditsSuccess />;
+  }
 
   const handleStartVideoGeneration = () => {
     // 添加参数让主页知道需要刷新积分
