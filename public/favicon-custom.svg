@@ -1,0 +1,41 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e60033;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff4757;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 黑色背景 -->
+  <rect width="32" height="32" rx="4" ry="4" fill="#1a1a1a"/>
+  
+  <!-- 外圈红色圆环 -->
+  <circle cx="16" cy="16" r="14" fill="none" stroke="url(#redGrad)" stroke-width="2"/>
+  
+  <!-- 内圈红色圆环 -->
+  <circle cx="16" cy="16" r="10" fill="none" stroke="url(#redGrad)" stroke-width="1.5"/>
+  
+  <!-- 中心技术图案 -->
+  <g fill="url(#redGrad)" stroke="url(#redGrad)" stroke-width="0.5">
+    <!-- 中心圆点 -->
+    <circle cx="16" cy="16" r="2"/>
+    
+    <!-- 四个方向的连接线 -->
+    <line x1="16" y1="10" x2="16" y2="14" stroke-width="1"/>
+    <line x1="16" y1="18" x2="16" y2="22" stroke-width="1"/>
+    <line x1="10" y1="16" x2="14" y2="16" stroke-width="1"/>
+    <line x1="18" y1="16" x2="22" y2="16" stroke-width="1"/>
+    
+    <!-- 对角线连接 -->
+    <line x1="12.5" y1="12.5" x2="14.5" y2="14.5" stroke-width="0.8"/>
+    <line x1="17.5" y1="17.5" x2="19.5" y2="19.5" stroke-width="0.8"/>
+    <line x1="19.5" y1="12.5" x2="17.5" y2="14.5" stroke-width="0.8"/>
+    <line x1="14.5" y1="17.5" x2="12.5" y2="19.5" stroke-width="0.8"/>
+    
+    <!-- 端点小圆 -->
+    <circle cx="16" cy="10" r="1"/>
+    <circle cx="16" cy="22" r="1"/>
+    <circle cx="10" cy="16" r="1"/>
+    <circle cx="22" cy="16" r="1"/>
+  </g>
+</svg>

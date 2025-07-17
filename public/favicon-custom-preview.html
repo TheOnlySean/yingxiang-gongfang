@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>映像工房 - 自定义Favicon 预览</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f5f5f5;
+        }
+        .preview-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .favicon-preview {
+            display: inline-block;
+            margin: 15px;
+            text-align: center;
+            vertical-align: top;
+        }
+        .favicon-preview img {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .size-label {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+            font-weight: bold;
+        }
+        .dark-bg {
+            background: #2d2d2d !important;
+        }
+        .instructions {
+            background: #e8f4fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1890ff;
+        }
+        .design-info {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #e60033;
+        }
+        .preview-row {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .preview-row h4 {
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <h1>映像工房 - 自定义Favicon 预览</h1>
+        
+        <div class="design-info">
+            <h3>🎨 设计说明</h3>
+            <p>基于您提供的红色圆形科技图标设计，采用了以下元素：</p>
+            <ul>
+                <li><strong>配色方案</strong>：映像工房品牌红色渐变 (#e60033 → #ff4757)</li>
+                <li><strong>背景色</strong>：深色背景 (#1a1a1a) 突出主图案</li>
+                <li><strong>设计元素</strong>：圆形外框 + 中心技术图案</li>
+                <li><strong>风格</strong>：现代科技感，符合AI视频生成工具的定位</li>
+            </ul>
+        </div>
+        
+        <div class="preview-row">
+            <h4>🖥️ 浏览器标签页预览</h4>
+            <div class="favicon-preview">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icmVkR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNlNjAwMzM7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I2ZmNDc1NztzdG9wLW9wYWNpdHk6MSIgLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIAogIDwhLS0g6buR6Imy6IOM5pmvIC0tPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjQiIHJ5PSI0IiBmaWxsPSIjMWExYTFhIi8+CiAgCiAgPCEtLSDlpJblnIjnuqLoibLlnIbnjq8gLS0+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgCiAgPCEtLSDlhoXlnIjnuqLoibLlnIbnjq8gLS0+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAKICA8IS0tIOS4reW/g+aKgOacr+WbvuahiCAtLT4KICA8ZyBmaWxsPSJ1cmwoI3JlZEdyYWQpIiBzdHJva2U9InVybCgjcmVkR3JhZCkiIHN0cm9rZS13aWR0aD0iMC41Ij4KICAgIDwhLS0g5Lit5b+D5ZyG54K5IC0tPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMiIvPgogICAgCiAgICA8IS0tIOWbm+S4quaWueWQkeeahOi/nuaOpee6vyAtLT4KICAgIDxsaW5lIHgxPSIxNiIgeTE9IjEwIiB4Mj0iMTYiIHkyPSIxNCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8bGluZSB4MT0iMTYiIHkxPSIxOCIgeDI9IjE2IiB5Mj0iMjIiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPGxpbmUgeDE9IjEwIiB5MT0iMTYiIHgyPSIxNCIgeTI9IjE2IiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDxsaW5lIHgxPSIxOCIgeTE9IjE2IiB4Mj0iMjIiIHkyPSIxNiIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICAKICAgIDwhLS0g5a+56KeS57q/6L+e5o6lIC0tPgogICAgPGxpbmUgeDE9IjEyLjUiIHkxPSIxMi41IiB4Mj0iMTQuNSIgeTI9IjE0LjUiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8bGluZSB4MT0iMTcuNSIgeTE9IjE3LjUiIHgyPSIxOS41IiB5Mj0iMTkuNSIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDxsaW5lIHgxPSIxOS41IiB5MT0iMTIuNSIgeDI9IjE3LjUiIHkyPSIxNC41IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPGxpbmUgeDE9IjE0LjUiIHkxPSIxNy41IiB4Mj0iMTIuNSIgeTI9IjE5LjUiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICAKICAgIDwhLS0g56uv54K55bCP5ZyGIC0tPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxMCIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIyMiIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIxNiIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMjIiIGN5PSIxNiIgcj0iMSIvPgogIDwvZz4KPC9zdmc+" width="16" height="16">
+                <span class="size-label">16x16 (最小)</span>
+            </div>
+            
+            <div class="favicon-preview">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icmVkR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNlNjAwMzM7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I2ZmNDc1NztzdG9wLW9wYWNpdHk6MSIgLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIAogIDwhLS0g6buR6Imy6IOM5pmvIC0tPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjQiIHJ5PSI0IiBmaWxsPSIjMWExYTFhIi8+CiAgCiAgPCEtLSDlpJblnIjnuqLoibLlnIbnjq8gLS0+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgCiAgPCEtLSDlhoXlnIjnuqLoibLlnIbnjq8gLS0+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAKICA8IS0tIOS4reW/g+aKgOacr+WbvuahiCAtLT4KICA8ZyBmaWxsPSJ1cmwoI3JlZEdyYWQpIiBzdHJva2U9InVybCgjcmVkR3JhZCkiIHN0cm9rZS13aWR0aD0iMC41Ij4KICAgIDwhLS0g5Lit5b+D5ZyG54K5IC0tPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMiIvPgogICAgCiAgICA8IS0tIOWbm+S4quaWueWQkeeahOi/nuaOpee6vyAtLT4KICAgIDxsaW5lIHgxPSIxNiIgeTE9IjEwIiB4Mj0iMTYiIHkyPSIxNCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8bGluZSB4MT0iMTYiIHkxPSIxOCIgeDI9IjE2IiB5Mj0iMjIiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPGxpbmUgeDE9IjEwIiB5MT0iMTYiIHgyPSIxNCIgeTI9IjE2IiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDxsaW5lIHgxPSIxOCIgeTE9IjE2IiB4Mj0iMjIiIHkyPSIxNiIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICAKICAgIDwhLS0g5a+56KeS57q/6L+e5o6lIC0tPgogICAgPGxpbmUgeDE9IjEyLjUiIHkxPSIxMi41IiB4Mj0iMTQuNSIgeTI9IjE0LjUiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8bGluZSB4MT0iMTcuNSIgeTE9IjE3LjUiIHgyPSIxOS41IiB5Mj0iMTkuNSIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDxsaW5lIHgxPSIxOS41IiB5MT0iMTIuNSIgeDI9IjE3LjUiIHkyPSIxNC41IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPGxpbmUgeDE9IjE0LjUiIHkxPSIxNy41IiB4Mj0iMTIuNSIgeTI9IjE5LjUiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICAKICAgIDwhLS0g56uv54K55bCP5ZyGIC0tPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxMCIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIyMiIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIxNiIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMjIiIGN5PSIxNiIgcj0iMSIvPgogIDwvZz4KPC9zdmc+" width="24" height="24">
+                <span class="size-label">24x24 (标准)</span>
+            </div>
+            
+            <div class="favicon-preview">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icmVkR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNlNjAwMzM7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I2ZmNDc1NztzdG9wLW9wYWNpdHk6MSIgLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIAogIDwhLS0g6buR6Imy6IOM5pmvIC0tPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjQiIHJ5PSI0IiBmaWxsPSIjMWExYTFhIi8+CiAgCiAgPCEtLSDlpJblnIjnuqLoibLlnIbnjq8gLS0+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgCiAgPCEtLSDlhoXlnIjnuqLoibLlnIbnjq8gLS0+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAKICA8IS0tIOS4reW/g+aKgOacr+WbvuahiCAtLT4KICA8ZyBmaWxsPSJ1cmwoI3JlZEdyYWQpIiBzdHJva2U9InVybCgjcmVkR3JhZCkiIHN0cm9rZS13aWR0aD0iMC41Ij4KICAgIDwhLS0g5Lit5b+D5ZyG54K5IC0tPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMiIvPgogICAgCiAgICA8IS0tIOWbm+S4quaWueWQkeeahOi/nuaOpee6vyAtLT4KICAgIDxsaW5lIHgxPSIxNiIgeTE9IjEwIiB4Mj0iMTYiIHkyPSIxNCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8bGluZSB4MT0iMTYiIHkxPSIxOCIgeDI9IjE2IiB5Mj0iMjIiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPGxpbmUgeDE9IjEwIiB5MT0iMTYiIHgyPSIxNCIgeTI9IjE2IiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDxsaW5lIHgxPSIxOCIgeTE9IjE2IiB4Mj0iMjIiIHkyPSIxNiIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICAKICAgIDwhLS0g5a+56KeS57q/6L+e5o6lIC0tPgogICAgPGxpbmUgeDE9IjEyLjUiIHkxPSIxMi41IiB4Mj0iMTQuNSIgeTI9IjE0LjUiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8bGluZSB4MT0iMTcuNSIgeTE9IjE3LjUiIHgyPSIxOS41IiB5Mj0iMTkuNSIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDxsaW5lIHgxPSIxOS41IiB5MT0iMTIuNSIgeDI9IjE3LjUiIHkyPSIxNC41IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPGxpbmUgeDE9IjE0LjUiIHkxPSIxNy41IiB4Mj0iMTIuNSIgeTI9IjE5LjUiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICAKICAgIDwhLS0g56uv54K55bCP5ZyGIC0tPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxMCIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIyMiIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIxNiIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMjIiIGN5PSIxNiIgcj0iMSIvPgogIDwvZz4KPC9zdmc+" width="32" height="32">
+                <span class="size-label">32x32 (高清)</span>
+            </div>
+        </div>
+        
+        <div class="preview-row">
+            <h4>📱 移动设备预览</h4>
+            <div class="favicon-preview">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InJlZEdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZTYwMDMzO3N0b3Atb3BhY2l0eToxIiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNmZjQ3NTc7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICAKICA8IS0tIOm7keiJsuiDjOaZryAtLT4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjY0IiByeT0iNjQiIGZpbGw9IiMxYTFhMWEiLz4KICAKICA8IS0tIOWkluWciOe6ouiJsuWchueOryAtLT4KICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjIyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3JlZEdyYWQpIiBzdHJva2Utd2lkdGg9IjMyIi8+CiAgCiAgPCEtLSDlhoXlnIjnuqLoibLlnIbnjq8gLS0+CiAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSIxNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIyNCIvPgogIAogIDwhLS0g5Lit5b+D5oqA5pyv5Zu+5qGIIC0tPgogIDxnIGZpbGw9InVybCgjcmVkR3JhZCkiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSI+CiAgICA8IS0tIOS4reW/g+WchueCuSAtLT4KICAgIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMzIiLz4KICAgIAogICAgPCEtLSDlm5vkuKrmlrnlkJHnmoTov57mjqXnur8gLS0+CiAgICA8bGluZSB4MT0iMjU2IiB5MT0iMTYwIiB4Mj0iMjU2IiB5Mj0iMjI0IiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICA8bGluZSB4MT0iMjU2IiB5MT0iMjg4IiB4Mj0iMjU2IiB5Mj0iMzUyIiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICA8bGluZSB4MT0iMTYwIiB5MT0iMjU2IiB4Mj0iMjI0IiB5Mj0iMjU2IiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICA8bGluZSB4MT0iMjg4IiB5MT0iMjU2IiB4Mj0iMzUyIiB5Mj0iMjU2IiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICAKICAgIDwhLS0g5a+56KeS57q/6L+e5o6lIC0tPgogICAgPGxpbmUgeDE9IjIwMCIgeTE9IjIwMCIgeDI9IjIzMiIgeTI9IjIzMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgPGxpbmUgeDE9IjI4MCIgeTE9IjI4MCIgeDI9IjMxMiIgeTI9IjMxMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgPGxpbmUgeDE9IjMxMiIgeTE9IjIwMCIgeDI9IjI4MCIgeTI9IjIzMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgPGxpbmUgeDE9IjIzMiIgeTE9IjI4MCIgeDI9IjIwMCIgeTI9IjMxMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgCiAgICA8IS0tIOerr+eCueWwj+WchiAtLT4KICAgIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjE2MCIgcj0iMTYiLz4KICAgIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjM1MiIgcj0iMTYiLz4KICAgIDxjaXJjbGUgY3g9IjE2MCIgY3k9IjI1NiIgcj0iMTYiLz4KICAgIDxjaXJjbGUgY3g9IjM1MiIgY3k9IjI1NiIgcj0iMTYiLz4KICA8L2c+Cjwvc3ZnPg==" width="57" height="57">
+                <span class="size-label">57x57 (iPhone)</span>
+            </div>
+            
+            <div class="favicon-preview">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InJlZEdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZTYwMDMzO3N0b3Atb3BhY2l0eToxIiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNmZjQ3NTc7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICAKICA8IS0tIOm7keiJsuiDjOaZryAtLT4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjY0IiByeT0iNjQiIGZpbGw9IiMxYTFhMWEiLz4KICAKICA8IS0tIOWkluWciOe6ouiJsuWchueOryAtLT4KICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjIyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3JlZEdyYWQpIiBzdHJva2Utd2lkdGg9IjMyIi8+CiAgCiAgPCEtLSDlhoXlnIjnuqLoibLlnIbnjq8gLS0+CiAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSIxNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIyNCIvPgogIAogIDwhLS0g5Lit5b+D5oqA5pyv5Zu+5qGIIC0tPgogIDxnIGZpbGw9InVybCgjcmVkR3JhZCkiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSI+CiAgICA8IS0tIOS4reW/g+WchueCuSAtLT4KICAgIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMzIiLz4KICAgIAogICAgPCEtLSDlm5vkuKrmlrnlkJHnmoTov57mjqXnur8gLS0+CiAgICA8bGluZSB4MT0iMjU2IiB5MT0iMTYwIiB4Mj0iMjU2IiB5Mj0iMjI0IiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICA8bGluZSB4MT0iMjU2IiB5MT0iMjg4IiB4Mj0iMjU2IiB5Mj0iMzUyIiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICA8bGluZSB4MT0iMTYwIiB5MT0iMjU2IiB4Mj0iMjI0IiB5Mj0iMjU2IiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICA8bGluZSB4MT0iMjg4IiB5MT0iMjU2IiB4Mj0iMzUyIiB5Mj0iMjU2IiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICAKICAgIDwhLS0g5a+56KeS57q/6L+e5o6lIC0tPgogICAgPGxpbmUgeDE9IjIwMCIgeTE9IjIwMCIgeDI9IjIzMiIgeTI9IjIzMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgPGxpbmUgeDE9IjI4MCIgeTE9IjI4MCIgeDI9IjMxMiIgeTI9IjMxMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgPGxpbmUgeDE9IjMxMiIgeTE9IjIwMCIgeDI9IjI4MCIgeTI9IjIzMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgPGxpbmUgeDE9IjIzMiIgeTE9IjI4MCIgeDI9IjIwMCIgeTI9IjMxMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgCiAgICA8IS0tIOerr+eCueWwj+WchiAtLT4KICAgIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjE2MCIgcj0iMTYiLz4KICAgIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjM1MiIgcj0iMTYiLz4KICAgIDxjaXJjbGUgY3g9IjE2MCIgY3k9IjI1NiIgcj0iMTYiLz4KICAgIDxjaXJjbGUgY3g9IjM1MiIgY3k9IjI1NiIgcj0iMTYiLz4KICA8L2c+Cjwvc3ZnPg==" width="120" height="120">
+                <span class="size-label">120x120 (iPhone)</span>
+            </div>
+            
+            <div class="favicon-preview">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InJlZEdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZTYwMDMzO3N0b3Atb3BhY2l0eToxIiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNmZjQ3NTc7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICAKICA8IS0tIOm7keiJsuiDjOaZryAtLT4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjY0IiByeT0iNjQiIGZpbGw9IiMxYTFhMWEiLz4KICAKICA8IS0tIOWkluWciOe6ouiJsuWchueOryAtLT4KICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjIyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3JlZEdyYWQpIiBzdHJva2Utd2lkdGg9IjMyIi8+CiAgCiAgPCEtLSDlhoXlnIjnuqLoibLlnIbnjq8gLS0+CiAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSIxNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIyNCIvPgogIAogIDwhLS0g5Lit5b+D5oqA5pyv5Zu+5qGIIC0tPgogIDxnIGZpbGw9InVybCgjcmVkR3JhZCkiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSI+CiAgICA8IS0tIOS4reW/g+WchueCuSAtLT4KICAgIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMzIiLz4KICAgIAogICAgPCEtLSDlm5vkuKrmlrnlkJHnmoTov57mjqXnur8gLS0+CiAgICA8bGluZSB4MT0iMjU2IiB5MT0iMTYwIiB4Mj0iMjU2IiB5Mj0iMjI0IiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICA8bGluZSB4MT0iMjU2IiB5MT0iMjg4IiB4Mj0iMjU2IiB5Mj0iMzUyIiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICA8bGluZSB4MT0iMTYwIiB5MT0iMjU2IiB4Mj0iMjI0IiB5Mj0iMjU2IiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICA8bGluZSB4MT0iMjg4IiB5MT0iMjU2IiB4Mj0iMzUyIiB5Mj0iMjU2IiBzdHJva2Utd2lkdGg9IjE2Ii8+CiAgICAKICAgIDwhLS0g5a+56KeS57q/6L+e5o6lIC0tPgogICAgPGxpbmUgeDE9IjIwMCIgeTE9IjIwMCIgeDI9IjIzMiIgeTI9IjIzMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgPGxpbmUgeDE9IjI4MCIgeTE9IjI4MCIgeDI9IjMxMiIgeTI9IjMxMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgPGxpbmUgeDE9IjMxMiIgeTE9IjIwMCIgeDI9IjI4MCIgeTI9IjIzMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgPGxpbmUgeDE9IjIzMiIgeTE9IjI4MCIgeDI9IjIwMCIgeTI9IjMxMiIgc3Ryb2tlLXdpZHRoPSIxMiIvPgogICAgCiAgICA8IS0tIOerr+eCueWwj+WchiAtLT4KICAgIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjE2MCIgcj0iMTYiLz4KICAgIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjM1MiIgcj0iMTYiLz4KICAgIDxjaXJjbGUgY3g9IjE2MCIgY3k9IjI1NiIgcj0iMTYiLz4KICAgIDxjaXJjbGUgY3g9IjM1MiIgY3k9IjI1NiIgcj0iMTYiLz4KICA8L2c+Cjwvc3ZnPg==" width="180" height="180">
+                <span class="size-label">180x180 (iPhone)</span>
+            </div>
+        </div>
+        
+        <div class="preview-row">
+            <h4>🌙 深色背景预览</h4>
+            <div class="favicon-preview">
+                <img class="dark-bg" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icmVkR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNlNjAwMzM7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I2ZmNDc1NztzdG9wLW9wYWNpdHk6MSIgLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIAogIDwhLS0g6buR6Imy6IOM5pmvIC0tPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjQiIHJ5PSI0IiBmaWxsPSIjMWExYTFhIi8+CiAgCiAgPCEtLSDlpJblnIjnuqLoibLlnIbnjq8gLS0+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgCiAgPCEtLSDlhoXlnIjnuqLoibLlnIbnjq8gLS0+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNyZWRHcmFkKSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAKICA8IS0tIOS4reW/g+aKgOacr+WbvuahiCAtLT4KICA8ZyBmaWxsPSJ1cmwoI3JlZEdyYWQpIiBzdHJva2U9InVybCgjcmVkR3JhZCkiIHN0cm9rZS13aWR0aD0iMC41Ij4KICAgIDwhLS0g5Lit5b+D5ZyG54K5IC0tPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMiIvPgogICAgCiAgICA8IS0tIOWbm+S4quaWueWQkeeahOi/nuaOpee6vyAtLT4KICAgIDxsaW5lIHgxPSIxNiIgeTE9IjEwIiB4Mj0iMTYiIHkyPSIxNCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8bGluZSB4MT0iMTYiIHkxPSIxOCIgeDI9IjE2IiB5Mj0iMjIiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPGxpbmUgeDE9IjEwIiB5MT0iMTYiIHgyPSIxNCIgeTI9IjE2IiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDxsaW5lIHgxPSIxOCIgeTE9IjE2IiB4Mj0iMjIiIHkyPSIxNiIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICAKICAgIDwhLS0g5a+56KeS57q/6L+e5o6lIC0tPgogICAgPGxpbmUgeDE9IjEyLjUiIHkxPSIxMi41IiB4Mj0iMTQuNSIgeTI9IjE0LjUiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8bGluZSB4MT0iMTcuNSIgeTE9IjE3LjUiIHgyPSIxOS41IiB5Mj0iMTkuNSIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDxsaW5lIHgxPSIxOS41IiB5MT0iMTIuNSIgeDI9IjE3LjUiIHkyPSIxNC41IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPGxpbmUgeDE9IjE0LjUiIHkxPSIxNy41IiB4Mj0iMTIuNSIgeTI9IjE5LjUiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICAKICAgIDwhLS0g56uv54K55bCP5ZyGIC0tPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxMCIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMTYiIGN5PSIyMiIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIxNiIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMjIiIGN5PSIxNiIgcj0iMSIvPgogIDwvZz4KPC9zdmc+" width="32" height="32">
+                <span class="size-label">深色模式</span>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 下一步操作</h3>
+            <ol>
+                <li><strong>方案A - 使用SVG转换</strong>：
+                    <ul>
+                        <li>访问 <a href="https://favicon.io/favicon-converter/" target="_blank">Favicon.io Converter</a></li>
+                        <li>上传生成的 <code>favicon-high-res.svg</code> 文件</li>
+                        <li>下载完整的favicon包</li>
+                    </ul>
+                </li>
+                <li><strong>方案B - 手动上传原图</strong>：
+                    <ul>
+                        <li>访问 <a href="https://favicon.io/favicon-converter/" target="_blank">Favicon.io Converter</a></li>
+                        <li>直接上传您的原始图片文件</li>
+                        <li>调整尺寸和背景色</li>
+                    </ul>
+                </li>
+                <li><strong>将下载的文件放到</strong> <code>public/</code> 目录</li>
+                <li><strong>重新启动开发服务器</strong>：<code>npm run dev</code></li>
+            </ol>
+        </div>
+        
+        <div class="instructions">
+            <h3>🎯 推荐设置</h3>
+            <p>如果使用在线工具，建议以下设置：</p>
+            <ul>
+                <li><strong>背景色</strong>：透明或 #1a1a1a</li>
+                <li><strong>图标色</strong>：保持原有的红色</li>
+                <li><strong>圆角</strong>：轻微圆角 (10-15%)</li>
+                <li><strong>边距</strong>：保持适当边距确保图标不被裁切</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

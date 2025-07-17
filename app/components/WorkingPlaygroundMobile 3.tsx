@@ -72,11 +72,6 @@ export default function WorkingPlaygroundMobile() {
   // 加载视频历史
   const loadVideoHistory = useCallback(async () => {
     if (!user) return;
-    
-    // 检查是否在客户端环境
-    if (typeof window === 'undefined') {
-      return;
-    }
 
     setIsLoadingHistory(true);
     try {
@@ -115,11 +110,6 @@ export default function WorkingPlaygroundMobile() {
 
     if (file.size > 10 * 1024 * 1024) {
       message.error('ファイルサイズは10MB以下にしてください');
-      return;
-    }
-
-    // 检查是否在客户端环境
-    if (typeof window === 'undefined') {
       return;
     }
 
@@ -185,12 +175,6 @@ export default function WorkingPlaygroundMobile() {
       setShowInsufficientCreditsModal(true);
       return;
     }
-    
-    // 检查是否在客户端环境
-    if (typeof window === 'undefined') {
-      return;
-    }
-    
     setIsGenerating(true);
     setGenerationProgress(0);
     setGenerationStage('preparing');
@@ -255,14 +239,6 @@ export default function WorkingPlaygroundMobile() {
   const checkAuth = useCallback(async () => {
     console.log('🔍 WorkingPlaygroundMobile - checkAuth 开始');
     try {
-      // 检查是否在客户端环境
-      if (typeof window === 'undefined') {
-        console.log('🖥️ 服务器端环境，设置为未认证状态');
-        setIsAuthenticated(false);
-        setIsLoading(false);
-        return;
-      }
-      
       const token = localStorage.getItem('token');
       console.log('📱 Token from localStorage:', token ? 'Token存在' : 'Token为空');
       
@@ -388,11 +364,6 @@ export default function WorkingPlaygroundMobile() {
         return;
       }
       try {
-        // 检查是否在客户端环境
-        if (typeof window === 'undefined') {
-          return;
-        }
-        
         const token = localStorage.getItem('token');
         const response = await fetch(`/api/status/${taskId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -438,12 +409,6 @@ export default function WorkingPlaygroundMobile() {
   // 3. 完全同步桌面端的refreshHistoryInternal逻辑
   const refreshHistoryInternal = useCallback(async (isManualRefresh: boolean = true) => {
     if (isUpdating) return;
-    
-    // 检查是否在客户端环境
-    if (typeof window === 'undefined') {
-      return;
-    }
-    
     setIsUpdating(true);
     try {
       const token = localStorage.getItem('token');
@@ -766,31 +731,6 @@ export default function WorkingPlaygroundMobile() {
                 {isGenerating ? '生成中...' : !isAuthenticated ? 'ログインして動画を生成' : '動画を生成（300ポイント）'}
               </Button>
               
-              {/* 音频功能提示 */}
-              <div style={{ 
-                marginTop: '8px', 
-                textAlign: 'center',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '4px',
-                padding: '0 8px'
-              }}>
-                <span style={{ 
-                  color: '#faad14',
-                  fontSize: '12px'
-                }}>
-                  🔊
-                </span>
-                <Text style={{ 
-                  color: 'rgba(255, 255, 255, 0.6)', 
-                  fontSize: '11px',
-                  lineHeight: '1.4'
-                }}>
-                  音声は実験的な機能のため、一部の動画ではご利用いただけない場合がございます。
-                </Text>
-              </div>
-              
               {user && (user.credits ?? 0) < 300 && (
                 <Text style={{ color: '#ff4d4f', textAlign: 'center', display: 'block', marginTop: '8px' }}>
                   ポイントが不足しています（300ポイント必要）
@@ -1072,14 +1012,6 @@ export default function WorkingPlaygroundMobile() {
                           muted
                           preload="metadata"
                           poster={video.thumbnailUrl}
-                          onLoadedMetadata={(e) => {
-                            // 确保视频元数据加载完成
-                            const videoElement = e.target as HTMLVideoElement;
-                            console.log('Mobile video metadata loaded:', videoElement.videoWidth, 'x', videoElement.videoHeight);
-                          }}
-                          onError={(e) => {
-                            console.error('Mobile video load error:', e);
-                          }}
                           style={{
                             width: '100%',
                             height: '100%',
@@ -1095,25 +1027,25 @@ export default function WorkingPlaygroundMobile() {
                           left: 0,
                           right: 0,
                           bottom: 0,
-                          background: 'rgba(0, 0, 0, 0.4)', // 增加背景透明度
+                          background: 'rgba(0, 0, 0, 0.3)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           transition: 'opacity 0.2s ease',
                         }}>
                           <div style={{
-                            width: '64px', // 稍微增大按钮
-                            height: '64px',
+                            width: '60px',
+                            height: '60px',
                             borderRadius: '50%',
-                            background: 'rgba(230, 0, 51, 0.9)', // 使用品牌红色背景
+                            background: 'rgba(0, 0, 0, 0.7)', // 改为黑色半透明背景
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)', // 增强阴影
-                            border: '2px solid rgba(255, 255, 255, 0.8)', // 添加白色边框
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                            border: '2px solid #ffffff', // 添加白色边框
                           }}>
                             <PlayCircleOutlined style={{
-                              fontSize: '36px', // 增大图标
+                              fontSize: '32px',
                               color: '#ffffff', // 改为白色图标
                               marginLeft: '4px' // 调整播放图标位置
                             }} />

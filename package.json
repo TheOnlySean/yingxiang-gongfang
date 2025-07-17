@@ -13,6 +13,8 @@
     "env:pull": "node scripts/quick-env-sync.js",
     "deploy:dev": "npm run env:dev && npm run build",
     "deploy:prod": "npm run env:prod && npm run build",
+    "favicon:create": "node scripts/create-favicon.js",
+    "favicon:custom": "node scripts/create-custom-favicon.js",
     "test": "echo \"测试功能待实现\" && exit 1"
   },
   "dependencies": {
@@ -42,6 +44,7 @@
     "react": "^18",
     "react-dom": "^18",
     "stripe": "^14.9.0",
+    "styled-jsx": "^5.1.7",
     "tailwindcss": "^3.3.0",
     "typescript": "^5",
     "uuid": "^8.3.2"

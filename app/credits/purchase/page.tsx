@@ -81,28 +81,10 @@ export default function CreditsPurchasePage() {
     setShouldUseMobile(isMobile || isTablet);
   }, [isMobile, isTablet]);
 
-  // 如果还没有挂载，显示加载状态
-  if (!mounted) {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  // 挂载后根据设备类型选择组件
-  if (shouldUseMobile) {
-    return <MobileCreditsPurchase />;
-  }
-
-  // 获取用户余额
+  // 获取用户余额 - 只在挂载后执行
   useEffect(() => {
+    if (!mounted) return;
+
     const fetchUserBalance = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -132,7 +114,27 @@ export default function CreditsPurchasePage() {
     };
 
     fetchUserBalance();
-  }, [router]);
+  }, [mounted, router]);
+
+  // 如果还没有挂载，显示加载状态
+  if (!mounted) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  // 挂载后根据设备类型选择组件
+  if (shouldUseMobile) {
+    return <MobileCreditsPurchase />;
+  }
 
   const handlePurchase = async (packageId: string) => {
     try {

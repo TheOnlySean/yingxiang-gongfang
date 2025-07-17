@@ -1,0 +1,21 @@
+{
+  "name": "映像工房",
+  "short_name": "映像工房",
+  "description": "想像を動画に変える魔法 - AI動画生成ツール",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#e60033",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

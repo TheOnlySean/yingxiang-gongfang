@@ -898,6 +898,30 @@ export default function WorkingPlayground() {
                 {isGenerating ? '生成中...' : !isAuthenticated ? 'ログインして動画を生成' : '動画を生成（300ポイント）'}
               </Button>
               
+              {/* 音频功能提示 */}
+              <div style={{ 
+                marginTop: '8px', 
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px'
+              }}>
+                <span style={{ 
+                  color: '#faad14',
+                  fontSize: '12px'
+                }}>
+                  🔊
+                </span>
+                <Text style={{ 
+                  color: 'rgba(255, 255, 255, 0.6)', 
+                  fontSize: '11px',
+                  lineHeight: '1.4'
+                }}>
+                  音声は実験的な機能のため、一部の動画ではご利用いただけない場合がございます。
+                </Text>
+              </div>
+              
             {user && (user.credits ?? 0) <= 0 && (
                 <Text style={{ color: '#ff4d4f', textAlign: 'center', display: 'block', marginTop: '8px' }}>
                   ポイントが不足しています
