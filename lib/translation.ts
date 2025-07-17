@@ -151,7 +151,7 @@ CRITICAL: Video Generation Guidelines:
 - AVOID phrases like "with subtitles", "showing text", "displaying words", "with captions", "text overlay"
 - DO NOT mention romaji, hiragana, katakana, or any written characters appearing on screen
 - Focus ONLY on visual elements, actions, scenes, environments, and spoken dialogue
-- The video should be purely visual without any on-screen text or written elements
+- The video should be purely visual without any distracting text or overlays.
 
 Guidelines for dialogue:
 - Japanese: 「こんにちは、今日はいい天気ですね」
@@ -167,7 +167,7 @@ Please translate the following Japanese text:
         { role: 'user', content: text }
       ],
       temperature: 0.3,
-      max_tokens: 1000
+      max_tokens: 2000
     });
 
     const translatedText = response.choices[0]?.message?.content || '';
