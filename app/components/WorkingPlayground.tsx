@@ -12,6 +12,7 @@ import {
   HistoryOutlined, ReloadOutlined, ThunderboltOutlined, CreditCardOutlined
 } from '@ant-design/icons';
 import { IUser, IVideo, IUploadedImage } from '@/types';
+import TemplateSelector, { TemplateId } from './TemplateSelector';
 
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -31,6 +32,9 @@ export default function WorkingPlayground() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [_loginForm] = Form.useForm();
+
+  // 模板选择状态
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId | null>('general');
 
   // 视频生成相关状态
   const [prompt, setPrompt] = useState('');
@@ -469,7 +473,8 @@ export default function WorkingPlayground() {
       const requestData = {
         originalPrompt: prompt.trim(),
         imageUrls: uploadedImages.map(img => img.url),
-        ...(seed.trim() && { seed: seed.trim() }) // 只有在seed有值时才添加
+        ...(seed.trim() && { seed: seed.trim() }), // 只有在seed有值时才添加
+        ...(selectedTemplate && { templateId: selectedTemplate }) // 添加模板ID
       };
       
       console.log('🎬 Sending video generation request:', {
@@ -820,6 +825,13 @@ export default function WorkingPlayground() {
               設定
             </Title>
           </div>
+
+          {/* 模板选择器 */}
+          <TemplateSelector
+            selectedTemplate={selectedTemplate}
+            onTemplateSelect={setSelectedTemplate}
+            onExampleSelect={(example) => setPrompt(example)}
+          />
 
           {/* 提示词输入 */}
           <Card 

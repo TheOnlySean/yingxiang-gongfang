@@ -1,0 +1,5 @@
+<svg width="200" height="120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="120" fill="#1890ff"/>
+  <text x="100" y="60" text-anchor="middle" fill="white" font-family="Arial" font-size="18" font-weight="bold">INTERVIEW</text>
+  <text x="100" y="80" text-anchor="middle" fill="white" font-family="Arial" font-size="12">インタビュー</text>
+</svg>

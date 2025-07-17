@@ -25,6 +25,7 @@ import {
   EyeOutlined
 } from '@ant-design/icons';
 import { IUser, IVideo } from '@/types';
+import TemplateSelector, { TemplateId } from './TemplateSelector';
 // 临时移除MobileAuthSystem导入，直接使用简单的登录提示
 // import MobileAuthSystem from './MobileAuthSystem';
 
@@ -46,6 +47,9 @@ export default function WorkingPlaygroundMobile() {
   const [user, setUser] = useState<IUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 模板选择状态
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId | null>('general');
 
   // 视频生成状态
   const [prompt, setPrompt] = useState('');
@@ -199,7 +203,8 @@ export default function WorkingPlaygroundMobile() {
       const requestData = {
         originalPrompt: prompt.trim(),
         imageUrls: uploadedImages.map(img => img.url),
-        ...(seed.trim() && { seed: seed.trim() })
+        ...(seed.trim() && { seed: seed.trim() }),
+        ...(selectedTemplate && { templateId: selectedTemplate })
       };
       const response = await fetch('/api/generate', {
         method: 'POST',
@@ -687,6 +692,13 @@ export default function WorkingPlaygroundMobile() {
                 設定
               </h3>
             </div>
+
+            {/* 模板选择器 */}
+            <TemplateSelector
+              selectedTemplate={selectedTemplate}
+              onTemplateSelect={setSelectedTemplate}
+              onExampleSelect={(example) => setPrompt(example)}
+            />
 
             {/* 提示词输入 */}
             <Card

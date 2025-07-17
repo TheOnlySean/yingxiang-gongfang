@@ -1,0 +1,5 @@
+<svg width="200" height="120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="120" fill="#e60033"/>
+  <text x="100" y="60" text-anchor="middle" fill="white" font-family="Arial" font-size="20" font-weight="bold">SELLING</text>
+  <text x="100" y="80" text-anchor="middle" fill="white" font-family="Arial" font-size="12">販売シーン</text>
+</svg>

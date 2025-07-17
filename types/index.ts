@@ -166,6 +166,7 @@ export interface IVideoGenerationForm {
   originalPrompt: string;
   imageUrls?: string[];
   seed?: string; // 添加seed支持
+  templateId?: string; // 添加模板ID支持
 }
 
 // 配置类型

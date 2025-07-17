@@ -244,7 +244,8 @@ export async function generateVideo(
     const translationResult = await translatePrompt(form.originalPrompt, {
       useCache: true,
       includeDialogue: true,
-      addRomaji: true
+      addRomaji: true,
+      templateId: form.templateId as any // 传入模板ID
     });
 
     if (!translationResult.success || !translationResult.data) {
@@ -257,9 +258,16 @@ export async function generateVideo(
       };
     }
 
+    // 应用场景模板增强
+    let finalPrompt = translationResult.data.translatedPrompt;
+    if (form.templateId) {
+      const { combinePromptWithScene } = await import('./translation');
+      finalPrompt = combinePromptWithScene(translationResult.data.translatedPrompt, form.templateId as any);
+    }
+
     // 构建KIE.AI请求
     const kieAiRequest: IKieAiGenerateRequest = {
-      prompt: translationResult.data.translatedPrompt,
+      prompt: finalPrompt, // 使用增强后的prompt
       model: 'veo3_fast' // 正確模型名稱
     };
 
