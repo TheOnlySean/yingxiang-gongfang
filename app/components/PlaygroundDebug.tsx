@@ -70,6 +70,12 @@ export default function PlaygroundDebug() {
     console.log('Checking auth status...');
     const checkAuth = async () => {
       try {
+        // 确保在客户端环境中执行
+        if (typeof window === 'undefined') {
+          setIsLoading(false);
+          return;
+        }
+        
         // 简单的认证检查
         const token = localStorage.getItem('token');
         if (token) {

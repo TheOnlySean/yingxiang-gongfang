@@ -13,7 +13,7 @@ export default function TestOAuthPage() {
   const testGetGoogleAuthUrl = async () => {
     try {
       setLoading(true);
-      message.info('正在获取Google授权URL...');
+      message.info('Google認証URLを取得中...');
 
       const response = await fetch('/api/auth/google', {
         method: 'GET'
@@ -24,13 +24,13 @@ export default function TestOAuthPage() {
 
       if (result.success && result.data?.authUrl) {
         setAuthUrl(result.data.authUrl);
-        message.success('Google授权URL获取成功！');
+        message.success('Google認証URL取得成功！');
       } else {
-        message.error('获取Google授权URL失败: ' + (result.error?.message || 'Unknown error'));
+                  message.error('Google認証URL取得に失敗しました: ' + (result.error?.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Get Google Auth URL error:', error);
-      message.error('请求失败: ' + (error as Error).message);
+              message.error('リクエストに失敗しました: ' + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -40,14 +40,14 @@ export default function TestOAuthPage() {
     if (authUrl) {
       window.location.href = authUrl;
     } else {
-      message.warning('请先获取授权URL');
+      message.warning('まず認証URLを取得してください');
     }
   };
 
   const testGoogleOAuthCallback = async () => {
     try {
       const testCode = 'test_authorization_code';
-      message.info('测试Google OAuth回调...');
+      message.info('Google OAuthコールバックをテスト中...');
 
       const response = await fetch('/api/auth/google', {
         method: 'POST',
@@ -61,13 +61,13 @@ export default function TestOAuthPage() {
       console.log('Google OAuth Callback Response:', result);
 
       if (result.success) {
-        message.success('Google OAuth回调测试成功！');
+        message.success('Google OAuthコールバックテスト成功！');
       } else {
-        message.error('Google OAuth回调测试失败: ' + (result.error?.message || 'Unknown error'));
+                  message.error('Google OAuthコールバックテストに失敗しました: ' + (result.error?.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Google OAuth callback test error:', error);
-      message.error('回调测试失败: ' + (error as Error).message);
+              message.error('コールバックテストに失敗しました: ' + (error as Error).message);
     }
   };
 

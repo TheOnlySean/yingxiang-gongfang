@@ -138,7 +138,7 @@ export default function WorkingPlaygroundMobile() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('上传API响应:', data);
+        console.log('アップロードAPI応答:', data);
         
         // 检查响应格式
         if (data.success && data.data && data.data.uploads && data.data.uploads.length > 0) {
@@ -253,38 +253,38 @@ export default function WorkingPlaygroundMobile() {
 
   // 用户认证检查
   const checkAuth = useCallback(async () => {
-    console.log('🔍 WorkingPlaygroundMobile - checkAuth 开始');
+          console.log('🔍 WorkingPlaygroundMobile - checkAuth 開始');
     try {
       // 检查是否在客户端环境
       if (typeof window === 'undefined') {
-        console.log('🖥️ 服务器端环境，设置为未认证状态');
+        console.log('🖥️ サーバー側環境、未認証状態に設定');
         setIsAuthenticated(false);
         setIsLoading(false);
         return;
       }
       
       const token = localStorage.getItem('token');
-      console.log('📱 Token from localStorage:', token ? 'Token存在' : 'Token为空');
+              console.log('📱 Token from localStorage:', token ? 'Token存在' : 'Token無し');
       
       if (!token) {
-        console.log('❌ 没有token，设置为未认证状态');
+                  console.log('❌ Token無し、未認証状態に設定');
         setIsAuthenticated(false);
         setIsLoading(false);
         return;
       }
 
-      console.log('🌐 发送认证验证请求...');
+              console.log('🌐 認証検証リクエスト送信中...');
       const response = await fetch('/api/auth/verify', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      console.log('📊 认证验证响应状态:', response.status);
+              console.log('📊 認証検証応答ステータス:', response.status);
       
       if (response.ok) {
         const userData = await response.json();
-        console.log('✅ 认证成功，用户数据:', {
+                  console.log('✅ 認証成功、ユーザーデータ:', {
           id: userData.id,
           email: userData.email,
           credits: userData.credits
@@ -292,19 +292,19 @@ export default function WorkingPlaygroundMobile() {
         setUser(userData);
         setIsAuthenticated(true);
       } else {
-        console.log('❌ 认证失败，状态:', response.status);
+                  console.log('❌ 認証失敗、ステータス:', response.status);
         const errorData = await response.text();
-        console.log('❌ 认证失败详情:', errorData);
+                  console.log('❌ 認証失敗詳細:', errorData);
         localStorage.removeItem('token');
         setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error('💥 认证检查异常:', error);
+              console.error('💥 認証チェック例外:', error);
       localStorage.removeItem('token');
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
-      console.log('🏁 checkAuth 完成');
+              console.log('🏁 checkAuth 完了');
     }
   }, []);
 

@@ -87,7 +87,7 @@ export default function PlaygroundFixed() {
       };
       
       setUploadedImages(prev => [...prev, newImage]);
-      message.success(`${file.name} 上传成功！`);
+              message.success(`${file.name} アップロード成功！`);
       return true;
     } catch (error) {
       console.error('Upload error:', error);
@@ -104,7 +104,7 @@ export default function PlaygroundFixed() {
 
   const handleGenerateVideo = useCallback(async () => {
     if (!prompt.trim()) {
-      message.warning('请输入视频描述');
+      message.warning('動画の説明を入力してください');
       return;
     }
 
@@ -139,7 +139,7 @@ export default function PlaygroundFixed() {
 
       setCurrentVideo(mockVideo);
       setVideoHistory(prev => [mockVideo, ...prev]);
-      message.success('视频生成完成！');
+              message.success('動画生成完了！');
     } catch (error) {
       console.error('Generation error:', error);
       message.error('生成に失敗しました');
@@ -198,6 +198,12 @@ export default function PlaygroundFixed() {
   // ===== 简化的认证检查 =====
   useEffect(() => {
     console.log('Starting auth check...');
+    
+    // 确保在客户端环境中执行
+    if (typeof window === 'undefined') {
+      setIsLoading(false);
+      return;
+    }
     
     // 简化的同步认证检查
     const token = localStorage.getItem('token');

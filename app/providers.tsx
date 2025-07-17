@@ -21,6 +21,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // 确保在客户端环境中执行
+        if (typeof window === 'undefined') {
+          setState(prev => ({ ...prev, isLoading: false }));
+          return;
+        }
+        
         const token = localStorage.getItem('token');
         if (!token) {
           setState(prev => ({ ...prev, isLoading: false }));

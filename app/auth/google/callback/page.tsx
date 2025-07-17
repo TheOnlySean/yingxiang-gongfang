@@ -18,7 +18,7 @@ export default function GoogleCallbackPage() {
     }
 
     const handleGoogleCallback = async () => {
-      console.log('🔗 Google OAuth 回调处理开始');
+      console.log('🔗 Google OAuth コールバック処理開始');
       try {
         // 标记为已处理
         hasProcessed.current = true;
@@ -28,23 +28,23 @@ export default function GoogleCallbackPage() {
         const state = searchParams.get('state');
         const error = searchParams.get('error');
 
-        console.log('📋 URL 参数:', {
+        console.log('📋 URL パラメータ:', {
           code: code ? `${code.substring(0, 10)}...` : 'null',
           state: state,
           error: error
         });
 
         if (error) {
-          console.error('❌ Google OAuth 错误:', error);
+          console.error('❌ Google OAuth エラー:', error);
           throw new Error(`Google OAuth error: ${error}`);
         }
 
         if (!code) {
-          console.error('❌ 没有找到授权码');
+          console.error('❌ 認証コードが見つかりません');
           throw new Error('Authorization code not found');
         }
 
-        console.log('🔄 处理 Google OAuth 回调...');
+                  console.log('🔄 Google OAuth コールバック処理中...');
 
         // 调用后端API处理Google OAuth回调
         const response = await fetch('/api/auth/google', {
@@ -55,10 +55,10 @@ export default function GoogleCallbackPage() {
           body: JSON.stringify({ code, state })
         });
 
-        console.log('📊 Google OAuth API 响应状态:', response.status);
+                  console.log('📊 Google OAuth API 応答ステータス:', response.status);
 
         const result = await response.json();
-        console.log('📝 Google OAuth API 响应:', {
+                  console.log('📝 Google OAuth API 応答:', {
           success: result.success,
           hasToken: !!result.data?.token,
           isNewUser: result.data?.isNewUser,
@@ -68,44 +68,44 @@ export default function GoogleCallbackPage() {
         if (!result.success) {
           // 特殊处理invalid_grant错误
           if (result.error?.message?.includes('invalid_grant')) {
-            console.warn('⚠️ Invalid grant 错误，可能是开发环境中的代码重用');
+            console.warn('⚠️ Invalid grant エラー、開発環境でのコード再利用の可能性');
             
             // 给用户更友好的提示，然后重试
-            message.warning('认证码已使用，正在重新认证...', 2);
+            message.warning('認証コードが使用済みです。再認証中...', 2);
             
             // 清除URL参数并重新开始OAuth流程
             setTimeout(() => {
-              console.log('🔄 重新跳转到登录页');
+              console.log('🔄 ログインページに再リダイレクト');
               router.push('/auth/login');
             }, 2000);
             return;
           }
           
-          console.error('❌ Google OAuth 处理失败:', result.error);
+                      console.error('❌ Google OAuth 処理失敗:', result.error);
           throw new Error(result.error?.message || 'Google OAuth processing failed');
         }
 
         // 存储JWT token
         if (result.data?.token) {
-          console.log('💾 存储 JWT token');
+                      console.log('💾 JWT token 保存');
           localStorage.setItem('token', result.data.token);
           message.success('Googleでログインしました');
           
           // 重定向到主页
-          console.log('🏠 重定向到主页');
+                      console.log('🏠 ホームページにリダイレクト');
           router.push('/');
         } else {
-          console.error('❌ 没有收到 token');
+                      console.error('❌ token を受信できませんでした');
           throw new Error('No token received');
         }
 
       } catch (error) {
-        console.error('💥 Google OAuth 回调异常:', error);
+                  console.error('💥 Google OAuth コールバック例外:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        message.error('Google登录失败，请重试');
+        message.error('Googleログインに失敗しました。再試行してください');
       } finally {
         setLoading(false);
-        console.log('🏁 Google OAuth 回调处理完成');
+        console.log('🏁 Google OAuth コールバック処理完了');
       }
     };
 

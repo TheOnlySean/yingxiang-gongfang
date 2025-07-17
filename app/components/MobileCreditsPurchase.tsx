@@ -77,48 +77,48 @@ export default function MobileCreditsPurchase() {
   // 获取用户余额
   useEffect(() => {
     const fetchUserBalance = async () => {
-      console.log('💰 MobileCreditsPurchase - 开始获取用户余额');
+      console.log('💰 MobileCreditsPurchase - ユーザー残高取得開始');
       try {
         const token = localStorage.getItem('token');
-        console.log('📱 Token from localStorage:', token ? 'Token存在' : 'Token为空');
+        console.log('📱 Token from localStorage:', token ? 'Token存在' : 'Token無し');
         
         if (!token) {
-          console.log('❌ 没有token，跳转到登录页');
+          console.log('❌ Token無し、ログインページにリダイレクト');
           router.push('/auth/login');
           return;
         }
 
-        console.log('🌐 发送用户余额请求...');
+        console.log('🌐 ユーザー残高リクエスト送信中...');
         const response = await fetch('/api/auth/verify', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        console.log('📊 用户余额响应状态:', response.status);
+        console.log('📊 ユーザー残高応答ステータス:', response.status);
 
         if (response.ok) {
           const data = await response.json();
-          console.log('✅ 用户余额获取成功:', {
+          console.log('✅ ユーザー残高取得成功:', {
             id: data.id,
             email: data.email,
             credits: data.credits
           });
           setUserCredits(data.credits || 0);
         } else {
-          console.log('❌ 用户余额获取失败，状态:', response.status);
+          console.log('❌ ユーザー残高取得失敗、ステータス:', response.status);
           const errorData = await response.text();
-          console.log('❌ 用户余额失败详情:', errorData);
+          console.log('❌ ユーザー残高失敗詳細:', errorData);
           message.error('認証エラーが発生しました');
           router.push('/auth/login');
         }
       } catch (error) {
-        console.error('💥 用户余额获取异常:', error);
+        console.error('💥 ユーザー残高取得例外:', error);
         message.error('残高の取得に失敗しました');
         router.push('/auth/login');
       } finally {
         setLoadingBalance(false);
-        console.log('🏁 用户余额获取完成');
+        console.log('🏁 ユーザー残高取得完了');
       }
     };
 

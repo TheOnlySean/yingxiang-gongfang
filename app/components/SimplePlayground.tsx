@@ -50,7 +50,7 @@ export default function SimplePlayground() {
       ];
       
       setVideoHistory(mockVideos);
-      message.success(`模擬視頻履歴を表示しました (${mockVideos.length}件)`);
+              message.success(`模擬動画履歴を表示しました (${mockVideos.length}件)`);
     } catch (error) {
       console.error('Error in fetchVideoHistory:', error);
       message.error('履歴の取得に失敗しました');
@@ -62,7 +62,7 @@ export default function SimplePlayground() {
   // 模拟视频生成
   const handleGenerateVideo = useCallback(async () => {
     if (!prompt.trim()) {
-      message.warning('請輸入視頻描述');
+      message.warning('動画の説明を入力してください');
       return;
     }
 
@@ -91,10 +91,10 @@ export default function SimplePlayground() {
 
       setVideoHistory(prev => [mockVideo, ...prev]);
       setPrompt('');
-      message.success('視頻生成完成！');
+              message.success('動画生成完了！');
     } catch (error) {
       console.error('Generation error:', error);
-      message.error('生成失敗');
+              message.error('生成に失敗しました');
     } finally {
       setIsGenerating(false);
     }
@@ -144,6 +144,12 @@ export default function SimplePlayground() {
 
   // 检查认证状态
   useEffect(() => {
+    // 确保在客户端环境中执行
+    if (typeof window === 'undefined') {
+      setIsLoading(false);
+      return;
+    }
+    
     // 简化的同步认证检查
     const token = localStorage.getItem('token');
     if (token) {
