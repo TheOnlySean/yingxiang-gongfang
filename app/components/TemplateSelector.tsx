@@ -98,16 +98,12 @@ export default function TemplateSelector({
 
   return (
     <>
-      {/* 模板预览横幅 - 重新设计 */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 rounded-xl border border-slate-600 relative overflow-hidden shadow-lg">
-        {/* 背景装饰 */}
-        <div className="absolute inset-0 bg-gradient-to-r from-red-900/20 via-transparent to-red-900/20"></div>
-        
-        {/* 前景内容 */}
-        <div className="relative z-10 flex items-center justify-between">
+      {/* 模板选择小框 - 放在prompt输入框上方 */}
+      <div className="mb-4 p-4 bg-slate-800 rounded-lg border border-slate-600 shadow-lg">
+        <div className="flex items-center justify-between">
+          {/* 左侧：模板预览图片 */}
           <div className="flex items-center space-x-4">
-            {/* 模板预览图 */}
-            <div className="relative w-24 h-16 bg-slate-900 rounded-lg overflow-hidden flex-shrink-0 border-2 border-slate-500 shadow-md">
+            <div className="relative w-32 h-20 bg-slate-900 rounded-lg overflow-hidden border border-slate-500">
               <Image
                 src={currentTemplate ? currentTemplate.thumbnail : '/templates/general.jpg'}
                 alt={currentTemplate ? currentTemplate.nameJa : '一般'}
@@ -116,40 +112,36 @@ export default function TemplateSelector({
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = `data:image/svg+xml;base64,${btoa(`
-                    <svg width="96" height="64" xmlns="http://www.w3.org/2000/svg">
-                      <rect width="96" height="64" fill="#1e293b"/>
-                      <text x="48" y="32" text-anchor="middle" dy="0.3em" fill="#f1f5f9" font-family="Arial" font-size="10" font-weight="bold">${currentTemplate?.name || 'GENERAL'}</text>
+                    <svg width="128" height="80" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="128" height="80" fill="#1e293b"/>
+                      <text x="64" y="40" text-anchor="middle" dy="0.3em" fill="#f1f5f9" font-family="Arial" font-size="12" font-weight="bold">${currentTemplate?.name || 'GENERAL'}</text>
                     </svg>
                   `)}`;
                 }}
               />
+              {/* 播放图标覆盖层 */}
               <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                <PlayCircleOutlined className="text-white text-xl opacity-90 drop-shadow-lg" />
+                <PlayCircleOutlined className="text-white text-2xl opacity-90" />
               </div>
             </div>
-
+            
             {/* 模板信息 */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-3 mb-2">
-                <span className="text-xl font-bold text-white drop-shadow-md">
-                  {currentTemplate ? currentTemplate.name : 'GENERAL'}
-                </span>
-                <span className="text-sm text-slate-300 bg-slate-700/50 px-2 py-1 rounded-full">
-                  {currentTemplate ? currentTemplate.nameJa : '一般'}
-                </span>
-              </div>
-              <p className="text-sm text-slate-300 line-clamp-1">
+            <div>
+              <h3 className="text-white font-semibold text-lg">
+                {currentTemplate ? currentTemplate.nameJa : '一般'}
+              </h3>
+              <p className="text-slate-400 text-sm mt-1">
                 {currentTemplate ? currentTemplate.description : '一般的なシーン、特別な指定なし'}
               </p>
             </div>
           </div>
 
-          {/* 操作按钮 */}
+          {/* 右侧：操作按钮 */}
           <div className="flex items-center space-x-3">
             {currentTemplate && (
               <button
                 onClick={handleExampleUse}
-                className="px-4 py-2 text-sm text-amber-300 hover:text-amber-200 bg-amber-900/30 hover:bg-amber-900/50 border border-amber-600 hover:border-amber-500 rounded-lg transition-all duration-200 shadow-sm"
+                className="px-3 py-2 text-sm text-amber-300 hover:text-amber-200 bg-amber-900/30 hover:bg-amber-900/50 border border-amber-600 hover:border-amber-500 rounded-md transition-all duration-200"
               >
                 例文を使用
               </button>
@@ -158,8 +150,7 @@ export default function TemplateSelector({
               type="primary"
               icon={<SwapOutlined />}
               onClick={() => setIsModalOpen(true)}
-              className="bg-red-600 hover:bg-red-700 border-red-600 hover:border-red-700 shadow-lg"
-              size="middle"
+              className="bg-red-600 hover:bg-red-700 border-red-600 hover:border-red-700"
             >
               変更
             </Button>
@@ -167,7 +158,7 @@ export default function TemplateSelector({
         </div>
       </div>
 
-      {/* 模板选择弹窗 - 重新设计 */}
+      {/* 模板选择弹窗 */}
       <Modal
         title={null}
         open={isModalOpen}
@@ -299,13 +290,6 @@ export default function TemplateSelector({
         .template-selector-modal .ant-modal-close:hover {
           color: #ffffff;
           background: rgba(0, 0, 0, 0.4);
-        }
-        
-        .line-clamp-1 {
-          display: -webkit-box;
-          -webkit-line-clamp: 1;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
         }
         
         .line-clamp-2 {
