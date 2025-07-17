@@ -92,12 +92,6 @@ export default function TemplateSelector({
     setIsModalOpen(false);
   };
 
-  const handleExampleClick = () => {
-    if (currentTemplate) {
-      onExampleSelect(currentTemplate.example);
-    }
-  };
-
   return (
     <>
       {/* 模板预览区域 - 放大图片尺寸 */}
