@@ -40,11 +40,6 @@ class KieAiClient {
   // 生成视频
   async generateVideo(request: IKieAiGenerateRequest): Promise<IKieAiGenerateResponse> {
     try {
-      console.log('Calling KIE.AI API:', {
-        url: `${this.baseUrl}/api/v1/veo/generate`,
-        request: request
-      });
-
       const response = await fetch(`${this.baseUrl}/api/v1/veo/generate`, {
         method: 'POST',
         headers: {
@@ -54,20 +49,13 @@ class KieAiClient {
         body: JSON.stringify(request)
       });
 
-      console.log('KIE.AI API response status:', response.status);
-      console.log('KIE.AI API response headers:', Object.fromEntries(response.headers.entries()));
-
       const responseText = await response.text();
-      console.log('KIE.AI API response text:', responseText);
 
       if (!response.ok) {
-        console.error('❌ KIE.AI API error details:', {
+        console.error('❌ KIE.AI API error:', {
           status: response.status,
           statusText: response.statusText,
-          responseText: responseText,
-          requestUrl: `${this.baseUrl}/api/v1/veo/generate`,
-          hasImageUrls: !!request.imageUrls && request.imageUrls.length > 0,
-          imageUrlCount: request.imageUrls ? request.imageUrls.length : 0
+          responseText: responseText
         });
         throw new Error(`KIE.AI API error: ${response.status} ${response.statusText} - ${responseText}`);
       }
@@ -80,8 +68,6 @@ class KieAiClient {
         console.error('Failed to parse KIE.AI response as JSON:', parseError);
         throw new Error(`Invalid JSON response from KIE.AI: ${responseText}`);
       }
-
-      console.log('KIE.AI API parsed response:', data);
       
       // 适配KIE.AI的实际响应格式
       if (data.code === 200 && data.data && data.data.taskId) {
@@ -116,28 +102,6 @@ class KieAiClient {
       return data;
     } catch (error) {
       console.error('KIE.AI get video status error:', error);
-      throw error;
-    }
-  }
-
-  // 获取1080P视频
-  async get1080PVideo(taskId: string): Promise<{ videoUrl: string }> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/v1/veo/1080p-video?taskId=${taskId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`KIE.AI API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('KIE.AI get 1080P video error:', error);
       throw error;
     }
   }
@@ -263,15 +227,10 @@ export async function generateVideo(
 
     // 应用场景模板增强
     let finalPrompt = translationResult.data.translatedPrompt;
-    console.log('📝 Original translated prompt:', translationResult.data.translatedPrompt);
-    console.log('🎬 Selected template:', form.templateId);
     
     if (form.templateId) {
       const { combinePromptWithScene } = await import('./translation');
       finalPrompt = await combinePromptWithScene(translationResult.data.translatedPrompt, form.templateId as any);
-      console.log('✨ Final prompt after template enhancement:', finalPrompt);
-    } else {
-      console.log('ℹ️ No template selected, using original translated prompt');
     }
 
     // 构建KIE.AI请求
@@ -283,36 +242,23 @@ export async function generateVideo(
     if (form.imageUrls && form.imageUrls.length > 0) {
       // 处理图片URL，确保KIE.AI可以访问
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3003';
-      console.log('🖼️ Processing image URLs for KIE.AI...');
-      console.log(`   Base URL: ${baseUrl}`);
-      console.log(`   Original image URLs: ${JSON.stringify(form.imageUrls)}`);
       
-      kieAiRequest.imageUrls = form.imageUrls.map((url, index) => {
-        console.log(`   Processing image ${index + 1}: ${url}`);
-        
+      kieAiRequest.imageUrls = form.imageUrls.map((url) => {
         if (url.startsWith('/uploads/')) {
           // 本地存储的图片：从 /uploads/filename 转换为 完整的API URL
           const filename = url.replace('/uploads/', '');
-          const fullUrl = `${baseUrl}/api/uploads/${filename}`;
-          console.log(`   ✅ Local storage: ${url} -> ${fullUrl}`);
-          return fullUrl;
+          return `${baseUrl}/api/uploads/${filename}`;
         } else if (url.startsWith('https://') && url.includes('vercel-storage.com')) {
           // Vercel Blob 存储的图片：直接使用（已经是完整的公共URL）
-          console.log(`   ✅ Vercel Blob: Using directly: ${url}`);
           return url;
         } else if (url.startsWith('http://') || url.startsWith('https://')) {
           // 其他外部URL：直接使用
-          console.log(`   ✅ External URL: Using directly: ${url}`);
           return url;
         } else {
           // 其他情况：尝试构建完整URL
-          const fullUrl = url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
-          console.log(`   ⚠️  Relative URL: ${url} -> ${fullUrl}`);
-          return fullUrl;
+          return url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
         }
       });
-      
-      console.log('🎯 Final image URLs for KIE.AI:', JSON.stringify(kieAiRequest.imageUrls, null, 2));
       
       // 验证URL格式
       const invalidUrls = kieAiRequest.imageUrls.filter(url => !url.startsWith('http'));
@@ -337,7 +283,6 @@ export async function generateVideo(
     deductedCredits = requiredCredits;
 
     // 调用KIE.AI API
-    console.log('🚀 Calling KIE.AI API with request:', JSON.stringify(kieAiRequest, null, 2));
     const kieAiResponse = await kieAiClient.generateVideo(kieAiRequest);
 
     // 保存到数据库
@@ -371,7 +316,6 @@ export async function generateVideo(
     if (creditsDeducted) {
       try {
         console.log(`Refunding ${deductedCredits} credits to user ${userId} due to generation failure`);
-        console.log(`Error details: ${error instanceof Error ? error.message : 'Unknown error'}`);
         const currentUser = await dbAdmin.findById(userId);
         if (currentUser) {
           await dbAdmin.update(userId, {
@@ -448,16 +392,12 @@ export async function generateVideo(
 // 查询视频状态
 export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVideo>> {
   try {
-    console.log(`Getting video status for taskId: ${taskId}`);
-    
     // 查询KIE.AI状态
     const kieAiStatus = await kieAiClient.getVideoStatus(taskId);
-    console.log('KIE.AI status response:', JSON.stringify(kieAiStatus, null, 2));
     
     // 查找数据库中的视频记录
     const dbVideo = await dbAdmin.getVideoByTaskId(taskId);
     if (!dbVideo) {
-      console.log(`No video found in database for taskId: ${taskId}`);
       return {
         success: false,
         error: {
@@ -474,14 +414,8 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
     let newStatus = 'failed';
     if (kieAiStatus.data && kieAiStatus.data.successFlag === 1) {
       newStatus = 'completed';
-      console.log('Video generation completed successfully');
     } else if (kieAiStatus.data && kieAiStatus.data.successFlag === 0) {
       newStatus = 'processing';
-      console.log('Video generation still in progress');
-    } else {
-      // 处理各种失败情况，包括400、500、501错误
-      console.log('Video generation failed');
-      console.log('KIE.AI status response:', JSON.stringify(kieAiStatus, null, 2));
     }
     
     // 更新状态
@@ -526,8 +460,8 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
           userFriendlyMessage = '画像の処理中にエラーが発生しました。';
         } else if (errorMessage.includes('content') || errorMessage.includes('policy') || errorMessage.includes('unsafe')) {
           userFriendlyMessage = 'コンテンツが安全基準に適合しません。';
-        } else if (errorMessage.includes('400')) {
-          userFriendlyMessage = 'リクエストの内容に問題があります。';
+        } else if (errorMessage.includes('400') || errorMessage.includes('violating content policies')) {
+          userFriendlyMessage = 'プロンプトがコンテンツポリシーに違反しています。別の内容でお試しください。';
         } else if (errorMessage.includes('500') || errorMessage.includes('Internal Error')) {
           userFriendlyMessage = 'サーバー内部エラーが発生しました。しばらく待ってからお試しください。';
         } else if (errorMessage.includes('501') || errorMessage.includes('Failed - Video generation task failed')) {
@@ -538,7 +472,7 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
       } else if (kieAiStatus.code && kieAiStatus.code !== 200) {
         // 处理HTTP错误状态码
         if (kieAiStatus.code === 400) {
-          userFriendlyMessage = 'リクエストの内容に問題があります。プロンプトや画像を確認してください。';
+          userFriendlyMessage = 'プロンプトがコンテンツポリシーに違反しています。別の内容でお試しください。';
         } else if (kieAiStatus.code === 402) {
           userFriendlyMessage = '現在利用者が多く、システムが混雑しています。しばらくお待ちいただき、後ほどお試しください。';
         } else if (kieAiStatus.code === 429) {
@@ -557,9 +491,14 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
     
     // 处理退款逻辑（当生成失败时）- 确保所有失败情况都能退款
     let refundApplied = false;
-    console.log(`Refund check: newStatus=${newStatus}, dbVideo.status=${dbVideo.status}, creditsUsed=${dbVideo.creditsUsed}`);
     
-    if (newStatus === 'failed' && (dbVideo.status === 'pending' || dbVideo.status === 'processing')) {
+    // 修改退款逻辑：只要视频失败且有消耗积分，就应该退款（除非已经退款过）
+    const shouldRefund = newStatus === 'failed' && 
+                        dbVideo.creditsUsed > 0 && 
+                        (dbVideo.status === 'pending' || dbVideo.status === 'processing' || 
+                         (dbVideo.status === 'failed' && (!dbVideo.error_message || dbVideo.error_message.includes('安全基準'))));
+    
+    if (shouldRefund) {
       try {
         // 获取用户当前信息
         const user = await dbAdmin.findById(dbVideo.userId);
@@ -572,11 +511,10 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
           });
           
           refundApplied = true;
-          console.log(`Refunded ${refundCredits} credits to user ${dbVideo.userId} for failed generation. Task: ${dbVideo.taskId}`);
+          console.log(`Refunded ${refundCredits} credits to user ${dbVideo.userId} for failed generation`);
           
           // 记录退款原因
           const errorSource = kieAiStatus.data?.errorMessage || `HTTP ${kieAiStatus.code}` || 'Unknown error';
-          console.log(`Refund reason: ${errorSource}`);
           
           // 如果是402错误，发送管理员警报邮件
           if (errorSource.includes('402') || kieAiStatus.code === 402) {
@@ -595,7 +533,7 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
                   <p>ユーザーには「システム混雑」として案内し、${refundCredits}ポイントを返還済みです。</p>
                 `
               });
-              console.log('Admin alert email sent for KIE.AI credit shortage (status check)');
+              console.log('Admin alert email sent for KIE.AI credit shortage');
             } catch (emailError) {
               console.error('Failed to send admin alert email:', emailError);
             }
@@ -610,10 +548,6 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
     // 如果有更新，保存到数据库
     let updatedVideo = dbVideo;
     if (Object.keys(updates).length > 0) {
-      console.log('Updating video in database:', updates);
-      if (refundApplied) {
-        console.log(`Applied refund for failed generation: ${dbVideo.creditsUsed} credits`);
-      }
       const updateResult = await dbAdmin.updateVideo(dbVideo.id, updates);
       if (!updateResult) {
         throw new Error('Failed to update video in database');
@@ -658,7 +592,6 @@ export async function getUserVideos(
     if (options.status) {
       dbOptions.status = options.status;
     }
-    // 注释掉：不再默认只显示完成的视频，让用户看到所有状态
     // 修复：为新用户提供友好的空结果，避免错误提示
     let result;
     try {
@@ -670,7 +603,6 @@ export async function getUserVideos(
         result = [];
       }
     } catch (error) {
-      console.log('getUserVideos method not found or failed, treating as new user:', error instanceof Error ? error.message : String(error));
       // 对于新用户或方法不存在，返回空数组而不是错误
       result = [];
     }
@@ -822,16 +754,16 @@ export async function batchUpdatePendingVideos(): Promise<{
   try {
     // 获取前5个pending/processing状态的视频
     const pendingVideos = await dbAdmin.getPendingVideos(5);
-    console.log(`Found ${pendingVideos.length} pending/processing videos to check`);
-
+    
     if (pendingVideos.length === 0) {
       return result;
     }
 
+    console.log(`Found ${pendingVideos.length} pending/processing videos to check`);
+
     // 批量检查每个视频的状态
     for (const video of pendingVideos) {
       try {
-        console.log(`Checking status for taskId: ${video.task_id}`);
         const statusResult = await getVideoStatus(video.task_id);
         
         if (statusResult.success) {
@@ -840,10 +772,8 @@ export async function batchUpdatePendingVideos(): Promise<{
           // 统计完成和失败的视频
           if (statusResult.data?.status === 'completed') {
             result.completedVideos++;
-            console.log(`Video ${video.task_id} completed successfully`);
           } else if (statusResult.data?.status === 'failed') {
             result.failedVideos++;
-            console.log(`Video ${video.task_id} failed`);
           }
         } else {
           result.errors.push(`Failed to check ${video.task_id}: ${statusResult.error?.message}`);
@@ -866,25 +796,8 @@ export async function batchUpdatePendingVideos(): Promise<{
   }
 }
 
-export async function batchUpdateVideoStatus(
-  limit: number = 50
-): Promise<void> {
-  try {
-    console.log(`Starting batch video status update (limit: ${limit})...`);
-    
-    // 这里需要实现批量更新逻辑
-    // 获取所有pending和processing状态的视频
-    // 逐个查询状态并更新
-    
-    console.log('Batch video status update completed');
-    
-  } catch (error) {
-    console.error('Batch update video status error:', error);
-  }
-}
-
 // 导出配置和客户端
-export { VIDEO_GENERATION_CONFIG, kieAiClient }; 
+export { VIDEO_GENERATION_CONFIG, kieAiClient };
 
 // 处理历史失败视频的退款
 export async function processFailedVideoRefunds(userId?: string): Promise<{
@@ -894,8 +807,6 @@ export async function processFailedVideoRefunds(userId?: string): Promise<{
   errors: string[];
 }> {
   try {
-    console.log('Processing failed video refunds...');
-    
     let processedCount = 0;
     let refundedCredits = 0;
     const errors: string[] = [];
@@ -905,7 +816,7 @@ export async function processFailedVideoRefunds(userId?: string): Promise<{
       throw new Error('User ID is required for refund processing');
     }
     
-    const videosResult = await getUserVideos(userId, { limit: 100 }); // 获取更多视频
+    const videosResult = await getUserVideos(userId, { limit: 100 });
     if (!videosResult.success || !videosResult.data) {
       throw new Error('Failed to get user videos');
     }
@@ -929,15 +840,10 @@ export async function processFailedVideoRefunds(userId?: string): Promise<{
               videosGenerated: Math.max(0, user.videosGenerated - 1)
             });
             
-            // 标记已退款（暂时跳过，因为需要更新数据库结构）
-            // await dbAdmin.updateVideo(video.id, {
-            //   refund_processed: true
-            // });
-            
             processedCount++;
             refundedCredits += video.creditsUsed;
             
-            console.log(`Refunded ${video.creditsUsed} credits to user ${video.userId} for failed video ${video.taskId}`);
+            console.log(`Refunded ${video.creditsUsed} credits to user ${video.userId} for failed video`);
           }
         } catch (error) {
           const errorMsg = `Failed to process refund for video ${video.taskId}: ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -945,8 +851,6 @@ export async function processFailedVideoRefunds(userId?: string): Promise<{
           errors.push(errorMsg);
         }
       }
-    } else {
-      console.log('No failed videos found that need refund processing');
     }
 
     return {
