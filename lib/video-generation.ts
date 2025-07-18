@@ -172,7 +172,6 @@ export async function generateVideo(
   userId: string,
   form: IVideoGenerationForm
 ): Promise<IApiResponse<IVideo>> {
-  let creditsDeducted = false;
   let deductedCredits = 0;
   
   try {
@@ -279,7 +278,6 @@ export async function generateVideo(
       credits: creditCheck.currentCredits - requiredCredits,
       videosGenerated: (currentUser?.videosGenerated || 0) + 1
     });
-    creditsDeducted = true;
     deductedCredits = requiredCredits;
 
     // 调用KIE.AI API
@@ -313,7 +311,7 @@ export async function generateVideo(
     console.error('Video generation error:', error);
     
     // 如果已经扣除了积分，需要退还
-    if (creditsDeducted) {
+    if (deductedCredits > 0) {
       try {
         console.log(`Refunding ${deductedCredits} credits to user ${userId} due to generation failure`);
         const currentUser = await dbAdmin.findById(userId);
@@ -490,7 +488,6 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
     }
     
     // 处理退款逻辑（当生成失败时）- 确保所有失败情况都能退款
-    let refundApplied = false;
     
     // 修改退款逻辑：只要视频失败且有消耗积分，就应该退款（除非已经退款过）
     const shouldRefund = newStatus === 'failed' && 
@@ -510,7 +507,6 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
             videosGenerated: Math.max(0, user.videosGenerated - 1)
           });
           
-          refundApplied = true;
           console.log(`Refunded ${refundCredits} credits to user ${dbVideo.userId} for failed generation`);
           
           // 记录退款原因
