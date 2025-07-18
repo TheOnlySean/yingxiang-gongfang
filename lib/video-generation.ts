@@ -386,6 +386,7 @@ export async function generateVideo(
 
     // 解析KIE.AI错误并提供用户友好的错误信息
     let userFriendlyMessage = 'サーバーエラーが発生しました。しばらく待ってからお試しください。';
+    let shouldSendAdminAlert = false;
     
     if (error instanceof Error) {
       const errorMessage = error.message;
@@ -393,6 +394,9 @@ export async function generateVideo(
       // 根据KIE.AI API文档的错误信息进行分类
       if (errorMessage.includes('400') || errorMessage.includes('Your prompt was flagged')) {
         userFriendlyMessage = 'プロンプトがコンテンツポリシーに違反しています。';
+      } else if (errorMessage.includes('402')) {
+        userFriendlyMessage = '現在利用者が多く、システムが混雑しています。しばらくお待ちいただき、後ほどお試しください。';
+        shouldSendAdminAlert = true;
       } else if (errorMessage.includes('Only English prompts are supported')) {
         userFriendlyMessage = '現在英語プロンプトのみサポートされています。';
       } else if (errorMessage.includes('Failed to fetch the image')) {
@@ -405,6 +409,28 @@ export async function generateVideo(
         userFriendlyMessage = '動画生成タスクが失敗しました。しばらく待ってからお試しください。';
       } else if (errorMessage.includes('Timeout')) {
         userFriendlyMessage = '処理がタイムアウトしました。しばらく待ってからお試しください。';
+      }
+    }
+    
+    // 如果是402错误，发送管理员警报邮件
+    if (shouldSendAdminAlert) {
+      try {
+        const { sendEmail } = await import('./email');
+        await sendEmail({
+          to: 'angelsphoto99@gmail.com',
+          subject: '【緊急】KIE.AI Credit不足警告',
+          html: `
+            <h2>KIE.AI Credit不足警告</h2>
+            <p>映像工房システムにて、KIE.AIのcreditが不足しています。</p>
+            <p><strong>発生時刻:</strong> ${new Date().toLocaleString('ja-JP')}</p>
+            <p><strong>エラー詳細:</strong> ${error instanceof Error ? error.message : 'Unknown error'}</p>
+            <p><strong>対応が必要:</strong> KIE.AIのcreditを至急チャージしてください。</p>
+            <p>ユーザーには「システム混雑」として案内し、300ポイントを返還済みです。</p>
+          `
+        });
+        console.log('Admin alert email sent for KIE.AI credit shortage');
+      } catch (emailError) {
+        console.error('Failed to send admin alert email:', emailError);
       }
     }
     
@@ -487,6 +513,8 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
         // 将技术错误信息转换为用户友好的提示
         if (errorMessage.includes('unsafe image upload') || errorMessage.includes('public error unsafe image upload')) {
           userFriendlyMessage = '画像の内容が安全基準に適合しません。';
+        } else if (errorMessage.includes('402')) {
+          userFriendlyMessage = '現在利用者が多く、システムが混雑しています。しばらくお待ちいただき、後ほどお試しください。';
         } else if (errorMessage.includes('Failed to fetch the image')) {
           userFriendlyMessage = '画像の取得に失敗しました。';
         } else if (errorMessage.includes('Only English prompts are supported')) {
@@ -510,6 +538,8 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
         // 处理HTTP错误状态码
         if (kieAiStatus.code === 400) {
           userFriendlyMessage = 'リクエストの内容に問題があります。プロンプトや画像を確認してください。';
+        } else if (kieAiStatus.code === 402) {
+          userFriendlyMessage = '現在利用者が多く、システムが混雑しています。しばらくお待ちいただき、後ほどお試しください。';
         } else if (kieAiStatus.code === 429) {
           userFriendlyMessage = 'リクエストが多すぎます。しばらく待ってからお試しください。';
         } else if (kieAiStatus.code === 500) {
@@ -544,6 +574,29 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
           // 记录退款原因
           const errorSource = kieAiStatus.data?.errorMessage || `HTTP ${kieAiStatus.code}` || 'Unknown error';
           console.log(`Refund reason: ${errorSource}`);
+          
+          // 如果是402错误，发送管理员警报邮件
+          if (errorSource.includes('402') || kieAiStatus.code === 402) {
+            try {
+              const { sendEmail } = await import('./email');
+              await sendEmail({
+                to: 'angelsphoto99@gmail.com',
+                subject: '【緊急】KIE.AI Credit不足警告',
+                html: `
+                  <h2>KIE.AI Credit不足警告</h2>
+                  <p>映像工房システムにて、KIE.AIのcreditが不足しています。</p>
+                  <p><strong>発生時刻:</strong> ${new Date().toLocaleString('ja-JP')}</p>
+                  <p><strong>TaskID:</strong> ${dbVideo.taskId}</p>
+                  <p><strong>エラー詳細:</strong> ${errorSource}</p>
+                  <p><strong>対応が必要:</strong> KIE.AIのcreditを至急チャージしてください。</p>
+                  <p>ユーザーには「システム混雑」として案内し、${refundCredits}ポイントを返還済みです。</p>
+                `
+              });
+              console.log('Admin alert email sent for KIE.AI credit shortage (status check)');
+            } catch (emailError) {
+              console.error('Failed to send admin alert email:', emailError);
+            }
+          }
         }
       } catch (refundError) {
         console.error('Failed to process refund:', refundError);
