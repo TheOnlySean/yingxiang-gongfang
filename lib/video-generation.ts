@@ -371,6 +371,7 @@ export async function generateVideo(
     if (creditsDeducted) {
       try {
         console.log(`Refunding ${deductedCredits} credits to user ${userId} due to generation failure`);
+        console.log(`Error details: ${error instanceof Error ? error.message : 'Unknown error'}`);
         const currentUser = await dbAdmin.findById(userId);
         if (currentUser) {
           await dbAdmin.update(userId, {
@@ -556,6 +557,8 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
     
     // 处理退款逻辑（当生成失败时）- 确保所有失败情况都能退款
     let refundApplied = false;
+    console.log(`Refund check: newStatus=${newStatus}, dbVideo.status=${dbVideo.status}, creditsUsed=${dbVideo.creditsUsed}`);
+    
     if (newStatus === 'failed' && (dbVideo.status === 'pending' || dbVideo.status === 'processing')) {
       try {
         // 获取用户当前信息
