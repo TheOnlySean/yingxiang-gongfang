@@ -1,4 +1,4 @@
-import { dbAdmin, dbVideoToVideo, createDbConnection } from './database';
+import { dbAdmin, dbVideoToVideo } from './database';
 import { translatePrompt } from './translation';
 import { 
   IVideo, 
@@ -172,8 +172,9 @@ export async function generateVideo(
   userId: string,
   form: IVideoGenerationForm
 ): Promise<IApiResponse<IVideo>> {
-  let deductedCredits = 0;
-  
+    let deductedCredits = 0;
+  let tempTaskId = '';
+
   try {
     // 验证表单
     const validation = validateVideoGenerationForm(form);
@@ -280,12 +281,15 @@ export async function generateVideo(
     });
     deductedCredits = requiredCredits;
 
+    // 生成临时的唯一taskId
+    tempTaskId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     // 先创建视频记录（包含积分信息）
     const videoData: any = {
       userId: userId,
       originalPrompt: form.originalPrompt,
       translatedPrompt: translationResult.data.translatedPrompt,
-      taskId: '', // 临时空值，API调用后更新
+      taskId: tempTaskId, // 临时唯一值，API调用后更新
       status: 'pending',
       creditsUsed: requiredCredits
     };
@@ -300,12 +304,12 @@ export async function generateVideo(
     const kieAiResponse = await kieAiClient.generateVideo(kieAiRequest);
 
     // 更新视频记录中的taskId
-    await dbAdmin.updateVideo(dbVideo.id, {
-      taskId: kieAiResponse.taskId
+    const updatedVideo = await dbAdmin.updateVideo(dbVideo.id, {
+      task_id: kieAiResponse.taskId
     });
     
     // 使用转换函数构建返回的视频对象
-    const video: IVideo = dbVideoToVideo(dbVideo);
+    const video: IVideo = dbVideoToVideo(updatedVideo || { ...dbVideo, task_id: kieAiResponse.taskId });
 
     return {
       success: true,
@@ -335,26 +339,14 @@ export async function generateVideo(
     // 如果视频记录已创建，更新状态为failed
     if (deductedCredits > 0) {
       try {
-        // 查找最近创建的视频记录
-        const client = await createDbConnection();
-        try {
-          const result = await client.query(`
-            SELECT id FROM videos 
-            WHERE user_id = $1 AND credits_used = $2 AND status = 'pending'
-            ORDER BY created_at DESC 
-            LIMIT 1
-          `, [userId, deductedCredits]);
-          
-          if (result.rows.length > 0) {
-            const videoId = result.rows[0].id;
-            await dbAdmin.updateVideo(videoId, {
-              status: 'failed',
-              error_message: '動画生成に失敗しました。'
-            });
-            console.log(`Updated video ${videoId} status to failed`);
-          }
-        } finally {
-          await client.end();
+        // 使用临时taskId查找视频记录
+        const tempVideo = await dbAdmin.getVideoByTaskId(tempTaskId);
+        if (tempVideo) {
+          await dbAdmin.updateVideo(tempVideo.id, {
+            status: 'failed',
+            error_message: '動画生成に失敗しました。'
+          });
+          console.log(`Updated video ${tempVideo.id} status to failed`);
         }
       } catch (updateError) {
         console.error('Failed to update video status:', updateError);
