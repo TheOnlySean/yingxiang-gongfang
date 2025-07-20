@@ -1656,6 +1656,7 @@ export default function WorkingPlayground() {
               <video
                 src={currentPlayingVideo.videoUrl}
                 controls
+                muted={false}
                 style={{ 
                   width: 'auto',
                   maxWidth: '80vw',
@@ -1987,6 +1988,7 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
               poster={thumbnailUrl}
               controls
               preload="metadata"
+              muted={false}
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
               onLoadedMetadata={(e) => {

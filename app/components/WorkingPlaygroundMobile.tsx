@@ -1207,7 +1207,7 @@ export default function WorkingPlaygroundMobile() {
                       >
                         <video
                           src={video.videoUrl}
-                          muted
+                          muted={false}
                           preload="metadata"
                           poster={video.thumbnailUrl}
                           onLoadedMetadata={(e) => {
@@ -1472,6 +1472,7 @@ export default function WorkingPlaygroundMobile() {
           <video
             src={currentPlayingVideo.videoUrl || ''}
             controls
+            muted={false}
             style={{
               width: '100%',
               height: 'auto',
