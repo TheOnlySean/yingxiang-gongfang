@@ -602,6 +602,10 @@ export default function WorkingPlayground() {
           return;
         }
 
+        // 关键修复：立即刷新历史记录，让新创建的pending视频进入监控列表
+        console.log('🚀 新しいビデオが開始されました。保留中のステータスを追跡するために履歴を更新しています...');
+        loadVideoHistory(1, true);
+
         console.log('Starting polling for taskId:', taskId);
         setCurrentTaskId(taskId);
 

@@ -247,6 +247,11 @@ export default function WorkingPlaygroundMobile() {
           setIsGenerating(false);
           return;
         }
+
+        // 关键修复：立即刷新历史记录
+        console.log('🚀 Mobile: 新しいビデオが開始されました。履歴を更新しています...');
+        loadVideoHistory();
+
         setGenerationStage('waiting');
         setGenerationProgress(5);
         // 进度条平滑推进
