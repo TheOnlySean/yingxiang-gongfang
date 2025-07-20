@@ -627,7 +627,7 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
         
         // 更新错误消息，包含退款信息
         if (!updates.error_message) {
-          updates.error_message = userFriendlyMessage;
+          updates.error_message = '動画生成に失敗しました。';
         }
         updates.error_message += ` (${refundCredits}ポイントを返還しました)`;
         

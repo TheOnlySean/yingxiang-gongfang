@@ -70,6 +70,9 @@ export async function POST(request: NextRequest) {
 
     // 获取最终用户信息
     const finalUser = await dbAdmin.findById(userId);
+    if (!finalUser) {
+      throw new Error('Failed to get final user state');
+    }
 
     return NextResponse.json({
       success: true,

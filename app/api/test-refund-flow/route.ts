@@ -50,6 +50,9 @@ export async function POST(request: NextRequest) {
 
     // 4. 退还积分
     const currentUser = await dbAdmin.findById(userId);
+    if (!currentUser) {
+      throw new Error('User not found during refund');
+    }
     await dbAdmin.update(userId, {
       credits: currentUser.credits + requiredCredits,
       videosGenerated: Math.max(0, (currentUser.videosGenerated || 0) - 1)
@@ -59,11 +62,15 @@ export async function POST(request: NextRequest) {
     const finalUser = await dbAdmin.findById(userId);
     const finalVideo = await dbAdmin.getVideoByTaskId(uniqueTaskId);
 
+    if (!finalUser) {
+      throw new Error('Failed to verify final user state');
+    }
+
     console.log(`Refund completed:`);
     console.log(`  - Final credits: ${finalUser.credits}`);
     console.log(`  - Expected credits: ${user.credits}`);
-    console.log(`  - Video status: ${finalVideo.status}`);
-    console.log(`  - Video error message: ${finalVideo.error_message}`);
+    console.log(`  - Video status: ${finalVideo?.status || 'unknown'}`);
+    console.log(`  - Video error message: ${finalVideo?.error_message || 'none'}`);
 
     return NextResponse.json({
       success: true,
