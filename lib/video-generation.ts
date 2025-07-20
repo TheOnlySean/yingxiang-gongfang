@@ -409,12 +409,23 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
     const updates: any = {};
     
     // 根据KIE.AI的实际响应格式判断状态
-    let newStatus = 'failed';
+    let newStatus = 'failed'; // 默认为失败
+    
     if (kieAiStatus.data && kieAiStatus.data.successFlag === 1) {
+      // successFlag === 1 表示成功完成
       newStatus = 'completed';
     } else if (kieAiStatus.data && kieAiStatus.data.successFlag === 0) {
-      newStatus = 'processing';
+      // successFlag === 0 需要进一步判断：有错误信息表示失败，无错误信息表示处理中
+      if (kieAiStatus.data.errorMessage || kieAiStatus.data.errorCode || 
+          (kieAiStatus.code && kieAiStatus.code !== 200)) {
+        // 有错误信息或非200状态码，表示失败
+        newStatus = 'failed';
+      } else {
+        // 无错误信息，表示还在处理中
+        newStatus = 'processing';
+      }
     }
+    // 其他情况保持默认的 'failed' 状态
     
     // 更新状态
     if (newStatus !== dbVideo.status) {
@@ -489,11 +500,10 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
     
     // 处理退款逻辑（当生成失败时）- 确保所有失败情况都能退款
     
-    // 修改退款逻辑：只要视频失败且有消耗积分，就应该退款（除非已经退款过）
+    // 简化退款逻辑：只要状态变为失败且有消耗积分，并且之前不是失败状态，就应该退款
     const shouldRefund = newStatus === 'failed' && 
                         dbVideo.creditsUsed > 0 && 
-                        (dbVideo.status === 'pending' || dbVideo.status === 'processing' || 
-                         (dbVideo.status === 'failed' && (!dbVideo.error_message || dbVideo.error_message.includes('安全基準'))));
+                        dbVideo.status !== 'failed'; // 只有当状态从非失败变为失败时才退款，避免重复退款
     
     if (shouldRefund) {
       try {
