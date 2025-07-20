@@ -480,7 +480,7 @@ export default function WorkingPlaygroundMobile() {
             if (data.updatedCount > 0) {
               console.log(`✅ Mobile3: Auto-check completed: ${data.updatedCount} videos updated, ${data.failedVideos} failed (refunded)`);
               // 静默刷新视频历史
-              loadVideoHistory(1, true);
+              loadVideoHistory();
             }
           }
         }
