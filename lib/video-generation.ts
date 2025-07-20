@@ -509,45 +509,126 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
       try {
         // 获取用户当前信息
         const user = await dbAdmin.findById(dbVideo.userId);
-        if (user && dbVideo.creditsUsed > 0) {
-          // 退还credits并减少生成次数
-          const refundCredits = dbVideo.creditsUsed;
-          await dbAdmin.update(dbVideo.userId, {
-            credits: user.credits + refundCredits,
-            videosGenerated: Math.max(0, user.videosGenerated - 1)
-          });
-          
-          console.log(`Refunded ${refundCredits} credits to user ${dbVideo.userId} for failed generation`);
-          
-          // 记录退款原因
-          const errorSource = kieAiStatus.data?.errorMessage || `HTTP ${kieAiStatus.code}` || 'Unknown error';
-          
-          // 如果是402错误，发送管理员警报邮件
-          if (errorSource.includes('402') || kieAiStatus.code === 402) {
-            try {
-              const { sendEmail } = await import('./email');
-              await sendEmail({
-                to: 'angelsphoto99@gmail.com',
-                subject: '【緊急】KIE.AI Credit不足警告',
-                html: `
-                  <h2>KIE.AI Credit不足警告</h2>
-                  <p>映像工房システムにて、KIE.AIのcreditが不足しています。</p>
-                  <p><strong>発生時刻:</strong> ${new Date().toLocaleString('ja-JP')}</p>
-                  <p><strong>TaskID:</strong> ${dbVideo.taskId}</p>
-                  <p><strong>エラー詳細:</strong> ${errorSource}</p>
-                  <p><strong>対応が必要:</strong> KIE.AIのcreditを至急チャージしてください。</p>
-                  <p>ユーザーには「システム混雑」として案内し、${refundCredits}ポイントを返還済みです。</p>
-                `
-              });
-              console.log('Admin alert email sent for KIE.AI credit shortage');
-            } catch (emailError) {
-              console.error('Failed to send admin alert email:', emailError);
-            }
+        if (!user) {
+          console.error(`Failed to find user ${dbVideo.userId} for refund`);
+          throw new Error(`User not found: ${dbVideo.userId}`);
+        }
+
+        if (dbVideo.creditsUsed <= 0) {
+          console.error(`Invalid creditsUsed value: ${dbVideo.creditsUsed} for user ${dbVideo.userId}`);
+          throw new Error(`Invalid creditsUsed: ${dbVideo.creditsUsed}`);
+        }
+
+        // 记录退款前的用户状态
+        const beforeCredits = user.credits;
+        const beforeVideosGenerated = user.videosGenerated;
+        const refundCredits = dbVideo.creditsUsed;
+
+        console.log(`Starting refund process for user ${dbVideo.userId}:`);
+        console.log(`  - Before credits: ${beforeCredits}`);
+        console.log(`  - Refund amount: ${refundCredits}`);
+        console.log(`  - Expected after credits: ${beforeCredits + refundCredits}`);
+
+        // 执行退款操作
+        const updateResult = await dbAdmin.update(dbVideo.userId, {
+          credits: beforeCredits + refundCredits,
+          videosGenerated: Math.max(0, beforeVideosGenerated - 1)
+        });
+
+        if (!updateResult) {
+          console.error(`Database update failed for user ${dbVideo.userId} refund`);
+          throw new Error(`Failed to update user credits`);
+        }
+
+        // 验证退款是否成功
+        const updatedUser = await dbAdmin.findById(dbVideo.userId);
+        if (!updatedUser) {
+          console.error(`Failed to verify refund for user ${dbVideo.userId}`);
+          throw new Error(`Failed to verify refund`);
+        }
+
+        console.log(`Refund verification for user ${dbVideo.userId}:`);
+        console.log(`  - After credits: ${updatedUser.credits}`);
+        console.log(`  - Credits difference: ${updatedUser.credits - beforeCredits}`);
+
+        if (updatedUser.credits !== beforeCredits + refundCredits) {
+          console.error(`Refund verification failed for user ${dbVideo.userId}:`);
+          console.error(`  - Expected: ${beforeCredits + refundCredits}`);
+          console.error(`  - Actual: ${updatedUser.credits}`);
+          throw new Error(`Refund verification failed`);
+        }
+
+        console.log(`✅ Successfully refunded ${refundCredits} credits to user ${dbVideo.userId}`);
+        console.log(`   Task: ${dbVideo.taskId}, Status: ${dbVideo.status} -> ${newStatus}`);
+        
+        // 记录退款原因
+        const errorSource = kieAiStatus.data?.errorMessage || `HTTP ${kieAiStatus.code}` || 'Unknown error';
+        console.log(`   Reason: ${errorSource}`);
+        
+        // 如果是402错误，发送管理员警报邮件
+        if (errorSource.includes('402') || kieAiStatus.code === 402) {
+          try {
+            const { sendEmail } = await import('./email');
+            await sendEmail({
+              to: 'angelsphoto99@gmail.com',
+              subject: '【緊急】KIE.AI Credit不足警告',
+              html: `
+                <h2>KIE.AI Credit不足警告</h2>
+                <p>映像工房システムにて、KIE.AIのcreditが不足しています。</p>
+                <p><strong>発生時刻:</strong> ${new Date().toLocaleString('ja-JP')}</p>
+                <p><strong>TaskID:</strong> ${dbVideo.taskId}</p>
+                <p><strong>UserID:</strong> ${dbVideo.userId}</p>
+                <p><strong>退款金額:</strong> ${refundCredits}ポイント</p>
+                <p><strong>エラー詳細:</strong> ${errorSource}</p>
+                <p><strong>対応が必要:</strong> KIE.AIのcreditを至急チャージしてください。</p>
+              `
+            });
+            console.log('Admin alert email sent for KIE.AI credit shortage');
+          } catch (emailError) {
+            console.error('Failed to send admin alert email:', emailError);
           }
         }
+
       } catch (refundError) {
-        console.error('Failed to process refund:', refundError);
-        // 继续执行，不要因为退款失败而中断状态更新
+        console.error(`❌ CRITICAL: Failed to process refund for user ${dbVideo.userId}:`, refundError);
+        console.error(`   TaskID: ${dbVideo.taskId}`);
+        console.error(`   Credits to refund: ${dbVideo.creditsUsed}`);
+        console.error(`   Error details:`, refundError instanceof Error ? refundError.message : refundError);
+        
+        // 发送紧急警报邮件给管理员
+        try {
+          const { sendEmail } = await import('./email');
+          await sendEmail({
+            to: 'angelsphoto99@gmail.com',
+            subject: '【緊急】退款操作失败警告',
+            html: `
+              <h2 style="color: red;">退款操作失败</h2>
+              <p>映像工房システムで退款処理が失敗しました。至急確認が必要です。</p>
+              <p><strong>発生時刻:</strong> ${new Date().toLocaleString('ja-JP')}</p>
+              <p><strong>UserID:</strong> ${dbVideo.userId}</p>
+              <p><strong>TaskID:</strong> ${dbVideo.taskId}</p>
+              <p><strong>退款金額:</strong> ${dbVideo.creditsUsed}ポイント</p>
+              <p><strong>エラー詳細:</strong> ${refundError instanceof Error ? refundError.message : 'Unknown error'}</p>
+              <p><strong>対応:</strong> 手動で該当ユーザーに${dbVideo.creditsUsed}ポイントを返還してください。</p>
+            `
+          });
+          console.log('Emergency refund failure alert sent to admin');
+        } catch (emailError) {
+          console.error('Failed to send emergency alert email:', emailError);
+        }
+
+        // 退款失败时，不要更新视频状态为failed，以便下次可以重试
+        // 但要记录错误信息
+        if (newStatus === 'failed') {
+          updates.error_message = `退款処理失敗のため一時的に保留中です。サポートにお問い合わせください。`;
+          // 不更新status，保持原状态以便重试退款
+          if ('status' in updates) {
+            delete updates.status;
+          }
+        }
+        
+        // 不要抛出错误阻止整个流程，而是记录问题并继续
+        // throw refundError; // 重新抛出错误，确保问题不被掩盖
       }
     }
     
