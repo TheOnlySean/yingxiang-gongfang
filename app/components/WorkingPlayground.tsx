@@ -372,6 +372,68 @@ export default function WorkingPlayground() {
     refreshHistoryInternal(false); // 自动刷新，不显示"没有确认中视频"
   }, [refreshHistoryInternal]);
 
+  // 定期检查pending/processing视频的定时器
+  useEffect(() => {
+    if (!user) return;
+
+    let intervalId: NodeJS.Timeout;
+    
+    // 检查是否有pending/processing状态的视频需要更新
+    const checkPendingVideos = async () => {
+      try {
+        // 如果正在生成中，不执行检查（避免干扰）
+        if (isGenerating) return;
+        
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        // 只有当视频历史中有pending/processing状态的视频时才执行批量更新
+        const hasPendingVideos = videoHistory.some(video => 
+          video.status === 'pending' || video.status === 'processing'
+        );
+
+        if (hasPendingVideos) {
+          console.log('🔄 Auto-checking pending/processing videos...');
+          
+          const batchResponse = await fetch('/api/batch-update', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (batchResponse.ok) {
+            const batchResult = await batchResponse.json();
+            const data = batchResult.data;
+            
+            if (data.updatedCount > 0) {
+              console.log(`✅ Auto-check completed: ${data.updatedCount} videos updated, ${data.failedVideos} failed (refunded)`);
+              // 静默刷新视频历史
+              loadVideoHistory(1, true);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Auto-check pending videos failed:', error);
+        // 不显示错误消息，静默失败
+      }
+    };
+
+    // 启动定时器：每30秒检查一次
+    intervalId = setInterval(checkPendingVideos, 30000);
+
+    // 立即执行一次检查
+    checkPendingVideos();
+
+    // 清理定时器
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [user, videoHistory, isGenerating, loadVideoHistory]);
+
   // 下载视频文件到本地
   const downloadVideo = useCallback(async (videoUrl: string, filename?: string) => {
     try {
