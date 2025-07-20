@@ -1905,8 +1905,7 @@ function VideoHistoryCard({ video, index, onPlay, generateThumbnail, cachedThumb
       const wasPaused = videoRef.current.paused;
       const originalMuted = videoRef.current.muted;
       
-      // 静音播放预览
-      videoRef.current.muted = true;
+      // 保持声音播放预览（不再强制静音）
       videoRef.current.play().catch(console.error);
       
       // 保存原始状态
