@@ -1,4 +1,4 @@
-import { dbAdmin, dbVideoToVideo } from './database';
+import { dbAdmin, dbVideoToVideo, createDbConnection } from './database';
 import { translatePrompt } from './translation';
 import { 
   IVideo, 
@@ -280,15 +280,12 @@ export async function generateVideo(
     });
     deductedCredits = requiredCredits;
 
-    // 调用KIE.AI API
-    const kieAiResponse = await kieAiClient.generateVideo(kieAiRequest);
-
-    // 保存到数据库
+    // 先创建视频记录（包含积分信息）
     const videoData: any = {
       userId: userId,
       originalPrompt: form.originalPrompt,
       translatedPrompt: translationResult.data.translatedPrompt,
-      taskId: kieAiResponse.taskId,
+      taskId: '', // 临时空值，API调用后更新
       status: 'pending',
       creditsUsed: requiredCredits
     };
@@ -298,6 +295,14 @@ export async function generateVideo(
     }
 
     const dbVideo = await dbAdmin.createVideo(videoData);
+
+    // 调用KIE.AI API
+    const kieAiResponse = await kieAiClient.generateVideo(kieAiRequest);
+
+    // 更新视频记录中的taskId
+    await dbAdmin.updateVideo(dbVideo.id, {
+      taskId: kieAiResponse.taskId
+    });
     
     // 使用转换函数构建返回的视频对象
     const video: IVideo = dbVideoToVideo(dbVideo);
@@ -318,12 +323,41 @@ export async function generateVideo(
         if (currentUser) {
           await dbAdmin.update(userId, {
             credits: currentUser.credits + deductedCredits,
-            videosGenerated: Math.max(0, currentUser.videosGenerated - 1)
+            videosGenerated: Math.max(0, (currentUser.videosGenerated || 0) - 1)
           });
           console.log(`Successfully refunded ${deductedCredits} credits to user ${userId}`);
         }
       } catch (refundError) {
         console.error('Failed to refund credits:', refundError);
+      }
+    }
+
+    // 如果视频记录已创建，更新状态为failed
+    if (deductedCredits > 0) {
+      try {
+        // 查找最近创建的视频记录
+        const client = await createDbConnection();
+        try {
+          const result = await client.query(`
+            SELECT id FROM videos 
+            WHERE user_id = $1 AND credits_used = $2 AND status = 'pending'
+            ORDER BY created_at DESC 
+            LIMIT 1
+          `, [userId, deductedCredits]);
+          
+          if (result.rows.length > 0) {
+            const videoId = result.rows[0].id;
+            await dbAdmin.updateVideo(videoId, {
+              status: 'failed',
+              error_message: '動画生成に失敗しました。'
+            });
+            console.log(`Updated video ${videoId} status to failed`);
+          }
+        } finally {
+          await client.end();
+        }
+      } catch (updateError) {
+        console.error('Failed to update video status:', updateError);
       }
     }
 
@@ -432,6 +466,9 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
       updates.status = newStatus;
     }
     
+    // 检查是否需要退款（无论状态是否变化）
+    const needsRefundCheck = newStatus === 'failed' && dbVideo.credits_used > 0;
+    
     // 处理视频URL（从response.resultUrls数组中获取）
     if (kieAiStatus.data && kieAiStatus.data.response && kieAiStatus.data.response.resultUrls && kieAiStatus.data.response.resultUrls.length > 0) {
       const videoUrl = kieAiStatus.data.response.resultUrls[0];
@@ -500,10 +537,33 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
     
     // 处理退款逻辑（当生成失败时）- 确保所有失败情况都能退款
     
-    // 简化退款逻辑：只要状态变为失败且有消耗积分，并且之前不是失败状态，就应该退款
-    const shouldRefund = newStatus === 'failed' && 
-                        dbVideo.creditsUsed > 0 && 
-                        dbVideo.status !== 'failed'; // 只有当状态从非失败变为失败时才退款，避免重复退款
+    // 修复的退款逻辑：确保所有失败情况都能退款
+    // 1. 状态变为失败
+    // 2. 有消耗积分
+    // 3. 之前不是失败状态（避免重复退款）
+    // 4. 或者之前是失败状态但没有退款标记（处理历史数据）
+    const shouldRefund = needsRefundCheck && 
+                        (dbVideo.status !== 'failed' || !dbVideo.error_message?.includes('返還'));
+    
+    // 添加更详细的调试日志
+    console.log(`🔍 Detailed refund check for video ${dbVideo.task_id}:`);
+    console.log(`  - Current status: ${dbVideo.status}`);
+    console.log(`  - New status: ${newStatus}`);
+    console.log(`  - Credits used: ${dbVideo.credits_used}`);
+    console.log(`  - Error message: ${dbVideo.error_message}`);
+    console.log(`  - Needs refund check: ${needsRefundCheck}`);
+    console.log(`  - Should refund: ${shouldRefund}`);
+    console.log(`  - Status changed: ${dbVideo.status !== newStatus}`);
+    console.log(`  - Has refund message: ${dbVideo.error_message?.includes('返還') || false}`);
+    
+    // 添加调试日志
+    console.log(`Refund check for video ${dbVideo.task_id}:`);
+    console.log(`  - Current status: ${dbVideo.status}`);
+    console.log(`  - New status: ${newStatus}`);
+    console.log(`  - Credits used: ${dbVideo.credits_used}`);
+    console.log(`  - Error message: ${dbVideo.error_message}`);
+    console.log(`  - Needs refund check: ${needsRefundCheck}`);
+    console.log(`  - Should refund: ${shouldRefund}`);
     
     if (shouldRefund) {
       try {
@@ -514,15 +574,15 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
           throw new Error(`User not found: ${dbVideo.userId}`);
         }
 
-        if (dbVideo.creditsUsed <= 0) {
-          console.error(`Invalid creditsUsed value: ${dbVideo.creditsUsed} for user ${dbVideo.userId}`);
-          throw new Error(`Invalid creditsUsed: ${dbVideo.creditsUsed}`);
+        if (dbVideo.credits_used <= 0) {
+          console.error(`Invalid creditsUsed value: ${dbVideo.credits_used} for user ${dbVideo.userId}`);
+          throw new Error(`Invalid creditsUsed: ${dbVideo.credits_used}`);
         }
 
         // 记录退款前的用户状态
         const beforeCredits = user.credits;
         const beforeVideosGenerated = user.videosGenerated;
-        const refundCredits = dbVideo.creditsUsed;
+        const refundCredits = dbVideo.credits_used;
 
         console.log(`Starting refund process for user ${dbVideo.userId}:`);
         console.log(`  - Before credits: ${beforeCredits}`);
@@ -532,7 +592,7 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
         // 执行退款操作
         const updateResult = await dbAdmin.update(dbVideo.userId, {
           credits: beforeCredits + refundCredits,
-          videosGenerated: Math.max(0, beforeVideosGenerated - 1)
+          videosGenerated: Math.max(0, (beforeVideosGenerated || 0) - 1)
         });
 
         if (!updateResult) {
@@ -565,6 +625,12 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
         const errorSource = kieAiStatus.data?.errorMessage || `HTTP ${kieAiStatus.code}` || 'Unknown error';
         console.log(`   Reason: ${errorSource}`);
         
+        // 更新错误消息，包含退款信息
+        if (!updates.error_message) {
+          updates.error_message = userFriendlyMessage;
+        }
+        updates.error_message += ` (${refundCredits}ポイントを返還しました)`;
+        
         // 如果是402错误，发送管理员警报邮件
         if (errorSource.includes('402') || kieAiStatus.code === 402) {
           try {
@@ -592,7 +658,7 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
       } catch (refundError) {
         console.error(`❌ CRITICAL: Failed to process refund for user ${dbVideo.userId}:`, refundError);
         console.error(`   TaskID: ${dbVideo.taskId}`);
-        console.error(`   Credits to refund: ${dbVideo.creditsUsed}`);
+        console.error(`   Credits to refund: ${dbVideo.credits_used}`);
         console.error(`   Error details:`, refundError instanceof Error ? refundError.message : refundError);
         
         // 发送紧急警报邮件给管理员
@@ -607,9 +673,9 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
               <p><strong>発生時刻:</strong> ${new Date().toLocaleString('ja-JP')}</p>
               <p><strong>UserID:</strong> ${dbVideo.userId}</p>
               <p><strong>TaskID:</strong> ${dbVideo.taskId}</p>
-              <p><strong>退款金額:</strong> ${dbVideo.creditsUsed}ポイント</p>
+              <p><strong>退款金額:</strong> ${dbVideo.credits_used}ポイント</p>
               <p><strong>エラー詳細:</strong> ${refundError instanceof Error ? refundError.message : 'Unknown error'}</p>
-              <p><strong>対応:</strong> 手動で該当ユーザーに${dbVideo.creditsUsed}ポイントを返還してください。</p>
+              <p><strong>対応:</strong> 手動で該当ユーザーに${dbVideo.credits_used}ポイントを返還してください。</p>
             `
           });
           console.log('Emergency refund failure alert sent to admin');
@@ -628,6 +694,7 @@ export async function getVideoStatus(taskId: string): Promise<IApiResponse<IVide
         }
         
         // 不要抛出错误阻止整个流程，而是记录问题并继续
+        console.error(`Refund process failed for video ${dbVideo.task_id}:`, refundError);
         // throw refundError; // 重新抛出错误，确保问题不被掩盖
       }
     }
